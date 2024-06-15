@@ -14,7 +14,14 @@ const port = process.env.PORT || 5010;
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(cors(
+    {
+        origin: 'http://kallabakari.is',
+        optionsSuccessStatus: 200,
+        credentials: true
+    }
+));
+
 app.use(bodyParser.json());
 
 // Routes
