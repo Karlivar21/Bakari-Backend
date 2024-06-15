@@ -1,7 +1,9 @@
+
+// controllers/orderController.js
 const Order = require('../models/Order');
 
 const createOrder = async (req, res) => {
-    const { name, phone, email, date, cake, size, filling, bottom, smjorkrem, user_message } = req.body;
+    const { name, phone, email, date, cakes, breads, minidonuts, user_message } = req.body;
 
     try {
         const newOrder = new Order({
@@ -9,11 +11,9 @@ const createOrder = async (req, res) => {
             phone,
             email,
             date,
-            cake,
-            size,
-            filling,
-            bottom,
-            smjorkrem,
+            cakes,
+            breads,
+            minidonuts,
             user_message,
         });
 
