@@ -1,18 +1,10 @@
-const express = require('express');
-const { createOrder } = require('../controllers/orderController');
+import express from 'express';
+
 const router = express.Router();
-const Order = require('../models/Order');
 
-console.log('createOrder:', createOrder); 
-router.post('/orders', createOrder);
-
-router.get('/orders', async (req, res) => {
-    try {
-        const orders = await Order.find();
-        res.status(200).json(orders);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+// Define your routes here
+router.get('/', (req, res) => {
+    res.send('Order route');
 });
 
-module.exports = router;
+export default router;  // Ensure default export
