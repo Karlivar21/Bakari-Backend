@@ -1,17 +1,30 @@
 import express from 'express';
+import mongoose from 'mongoose';
+import Order from '../models/order'; // Import the Order model
 
 const router = express.Router();
 
-// Define your routes here
-router.get('/', (req, res) => {
-    res.send('Order route');
+// GET route for fetching orders
+router.get('/', async (req, res) => {
+    try {
+        const orders = await Order.find();
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching orders', error });
+    }
 });
 
-// Example POST route for creating an order
-router.post('/', (req, res) => {
-    const order = req.body;
-    // Add logic to handle the order creation
-    res.status(201).json({ message: 'Order created', order });
+// POST route for creating an order
+router.post('/', async (req, res) => {
+    const orderData = req.body;
+
+    try {
+        const newOrder = new Order(orderData);
+        await newOrder.save();
+        res.status(201).json({ message: 'Order created', order: newOrder });
+    } catch (error) {
+        res.status(400).json({ message: 'Error creating order', error });
+    }
 });
 
-export default router;  // Ensure default export
+export default router;
