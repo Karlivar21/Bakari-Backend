@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const cakeSchema = new mongoose.Schema({
     cake: String,
@@ -28,4 +28,5 @@ const orderSchema = new mongoose.Schema({
     user_message: { type: String }
 });
 
-module.exports = mongoose.model('Order', orderSchema);
+const Order = mongoose.model('Order', orderSchema);
+export default Order; // Use export default for ES module
