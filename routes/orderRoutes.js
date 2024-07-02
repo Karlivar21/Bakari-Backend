@@ -1,6 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import Order from '../models/order'; // Import the Order model
+import Order from '../models/Order.js';
 
 const router = express.Router();
 
