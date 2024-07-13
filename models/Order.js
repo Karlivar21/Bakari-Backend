@@ -25,7 +25,8 @@ const orderSchema = new mongoose.Schema({
     cakes: [cakeSchema],
     breads: [breadSchema],
     minidonuts: [minidonutSchema],
-    user_message: { type: String }
+    user_message: { type: String },
+    url: { type: String }
 });
 
 const Order = mongoose.model('Order', orderSchema);
