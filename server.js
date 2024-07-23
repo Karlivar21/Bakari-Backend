@@ -10,7 +10,7 @@ connectDB();
 
 // Use CORS middleware
 app.use(cors({
-  origin: '*', // Allow all origins for simplicity, adjust as needed
+  origin: 'https://kallabakari.is', // Allow only from this origin
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   preflightContinue: false,
   optionsSuccessStatus: 204
