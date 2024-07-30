@@ -19,9 +19,9 @@ app.use(cors({
 
 app.use(express.json());
 
-app.use('/api', soupPlanRoute);
 // Define routes
 app.use('/api/orders', orderRoutes);
+app.use('/api/soupPlan', soupPlanRoute);
 
 const PORT = process.env.PORT || 5010;
 
