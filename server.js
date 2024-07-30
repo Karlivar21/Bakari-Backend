@@ -1,6 +1,7 @@
 import express from 'express';
 import connectDB from './config/db.js';
 import orderRoutes from './routes/orderRoutes.js';
+import soupPlanRoute from './routes/soupPlan.js';
 import cors from 'cors';
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(express.json());
 
 // Define routes
 app.use('/api/orders', orderRoutes);
+app.use('/api/soupPlan', soupPlanRoute);
 
 const PORT = process.env.PORT || 5010;
 
