@@ -8,7 +8,21 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const soupPlan = await SoupPlan.find();
-    res.json(soupPlan);
+    const defaultPlan = {
+      Monday: '',
+      Tuesday: '',
+      Wednesday: '',
+      Thursday: '',
+      Friday: ''
+    };
+
+    // If no soup plans are found, return the default structure
+    const responsePlan = soupPlan.length ? soupPlan.reduce((acc, curr) => {
+      acc[curr.day] = curr.soup;
+      return acc;
+    }, {}) : defaultPlan;
+
+    res.json(responsePlan);
   } catch (err) {
     console.error('Error fetching soup plan:', err);
     res.status(500).json({ error: 'Error fetching soup plan', details: err.message });
