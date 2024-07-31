@@ -1,8 +1,13 @@
-// backend/routes/soupPlan.js
-const express = require('express');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
 const router = express.Router();
-const fs = require('fs');
-const path = require('path');
+
+// Convert import.meta.url to __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const soupPlanFilePath = path.join(__dirname, '..', 'data', 'soupPlan.json');
 
@@ -21,4 +26,4 @@ router.post('/updateSoupPlan', (req, res) => {
     });
 });
 
-module.exports = router;
+export default router;
