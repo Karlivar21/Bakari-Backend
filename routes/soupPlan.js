@@ -9,18 +9,21 @@ router.get('/', async (req, res) => {
   try {
     const soupPlan = await SoupPlan.find();
     const defaultPlan = {
-      Monday: '',
-      Tuesday: '',
-      Wednesday: '',
-      Thursday: '',
-      Friday: ''
+      Mánudagur: '',
+      Þriðjudagur: '',
+      Miðvikudagur: '',
+      Fimmtudagur: '',
+      Föstudagur: '',
+      week: {
+        startDate: new Date(),
+        endDate: new Date()
+      }
     };
 
-    // If no soup plans are found, return the default structure
     const responsePlan = soupPlan.length ? soupPlan.reduce((acc, curr) => {
       acc[curr.day] = curr.soup;
       return acc;
-    }, {}) : defaultPlan;
+    }, { ...defaultPlan, week: soupPlan[0].week }) : defaultPlan;
 
     res.json(responsePlan);
   } catch (err) {
@@ -35,11 +38,13 @@ router.post('/', async (req, res) => {
   try {
     await Promise.all(
       Object.keys(newSoupPlan).map(async day => {
-        await SoupPlan.findOneAndUpdate(
-          { day },
-          { soup: newSoupPlan[day] },
-          { upsert: true, new: true }
-        );
+        if (day !== 'week') {
+          await SoupPlan.findOneAndUpdate(
+            { day },
+            { soup: newSoupPlan[day], week: newSoupPlan.week },
+            { upsert: true, new: true }
+          );
+        }
       })
     );
     res.json({ message: 'Soup plan updated successfully' });

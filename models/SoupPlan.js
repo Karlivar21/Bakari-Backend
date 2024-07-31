@@ -5,11 +5,21 @@ const soupPlanSchema = new mongoose.Schema({
   day: {
     type: String,
     required: true,
-    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    enum: ['Mánudagur', 'Þriðjudagur', 'Miðvikudagur', 'Fimmtudagur', 'Föstudagur']
   },
   soup: {
     type: String,
     required: true
+  },
+  week: {
+    startDate: {
+      type: Date,
+      required: true
+    },
+    endDate: {
+      type: Date,
+      required: true
+    }
   }
 });
 
