@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 
 const soupPlanFilePath = path.join(__dirname, '..', 'data', 'soupPlan.json');
 
-router.get('/getSoupPlan', (req, res) => {
+router.get('/', (req, res) => {
     fs.readFile(soupPlanFilePath, (err, data) => {
         if (err) {
             console.error('Error reading soup plan file:', err);
@@ -21,7 +21,7 @@ router.get('/getSoupPlan', (req, res) => {
     });
 });
 
-router.post('/updateSoupPlan', (req, res) => {
+router.post('/', (req, res) => {
     const newSoupPlan = req.body;
     fs.writeFile(soupPlanFilePath, JSON.stringify(newSoupPlan, null, 2), (err) => {
         if (err) {
