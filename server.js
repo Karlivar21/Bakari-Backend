@@ -1,9 +1,11 @@
+// server.js (or app.js)
 import express from 'express';
 import connectDB from './config/db.js';
 import orderRoutes from './routes/orderRoutes.js';
 import soupPlanRoute from './routes/soupPlan.js';
+import authRoutes from './routes/authRoutes.js'; // Import auth routes
 import cors from 'cors';
-import { WebSocketServer } from 'ws';  // Correct import for WebSocketServer
+import { WebSocketServer } from 'ws';
 
 const app = express();
 
@@ -35,6 +37,7 @@ app.use((req, res, next) => {
 // Define routes
 app.use('/api/orders', orderRoutes);
 app.use('/api/soupPlan', soupPlanRoute);
+app.use('/api/auth', authRoutes); // Use auth routes
 
 // Start the server
 const server = app.listen(process.env.PORT || 5010, () => {
