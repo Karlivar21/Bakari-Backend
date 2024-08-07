@@ -26,6 +26,11 @@ app.use(cors({
   optionsSuccessStatus: 204
 }));
 
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 
 // Debugging log to verify routes
