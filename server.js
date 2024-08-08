@@ -18,6 +18,7 @@ app.use(cors({
     'https://kallabakari.is',
     'https://www.kallabakari.is',
     'https://www.pantanir.kallabakari.is',
+    'https://pantanir.kallabakari.is',
     'http://localhost:3001',
   ],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
