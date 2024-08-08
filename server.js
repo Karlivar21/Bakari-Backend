@@ -13,19 +13,19 @@ const app = express();
 connectDB();
 
 // Use CORS middleware
-app.use(cors({
-  origin: [
-    'https://kallabakari.is',
-    'https://www.kallabakari.is',
-    'https://www.pantanir.kallabakari.is',
-    'https://pantanir.kallabakari.is',
-    'http://localhost:3001',
-  ],
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-  credentials: true,
-  optionsSuccessStatus: 204
-}));
+const corsOptions = {
+    origin: [
+      'https://pantanir.kallabakari.is',
+      'https://www.pantanir.kallabakari.is',
+      'https://kallabakari.is',
+      'https://www.kallabakari.is',
+      'http://localhost:3001',
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    credentials: true,
+    optionsSuccessStatus: 204 // For legacy browser support
+  };
 
 app.use(cors(corsOptions));
 
