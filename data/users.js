@@ -1,4 +1,6 @@
 // data/users.js
+import bcrypt from 'bcryptjs';
+
 const users = [
     { username: 'kalli', password: bcrypt.hashSync('password', 10)}, // hashed password: password1
     { username: 'alli', password: bcrypt.hashSync('password123', 10)},
