@@ -1,33 +1,21 @@
 import mongoose from 'mongoose';
 
-const cakeSchema = new mongoose.Schema({
-    cake: String,
-    size: String,
-    filling: String,
-    bottom: String,
-    smjorkrem: String
+// Generic product schema
+const productSchema = new mongoose.Schema({
+    type: { type: String, required: true },  // e.g., "cake", "bread", "minidonut"
+    details: { type: mongoose.Schema.Types.Mixed, required: true }, // Flexible structure to hold specific product details
 }, { _id: false });
 
-const breadSchema = new mongoose.Schema({
-    bread: String,
-    quantity: Number
-}, { _id: false });
-
-const minidonutSchema = new mongoose.Schema({
-    quantity: Number
-}, { _id: false });
-
+// Order schema
 const orderSchema = new mongoose.Schema({
     name: { type: String, required: true },
     phone: { type: String, required: true },
     email: { type: String, required: true },
     date: { type: Date, required: true },
-    cakes: [cakeSchema],
-    breads: [breadSchema],
-    minidonuts: [minidonutSchema],
+    products: [productSchema], // Array of generic products
     user_message: { type: String },
     url: { type: String }
 });
 
 const Order = mongoose.model('Order', orderSchema);
-export default Order; // Use export default for ES module
+export default Order;

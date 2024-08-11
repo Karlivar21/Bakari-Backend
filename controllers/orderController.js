@@ -3,7 +3,7 @@
 const Order = require('../models/Order');
 
 const createOrder = async (req, res) => {
-    const { name, phone, email, date, cakes, breads, minidonuts, user_message, url} = req.body;
+    const { name, phone, email, date, products, user_message, url } = req.body;
 
     try {
         const newOrder = new Order({
@@ -11,9 +11,7 @@ const createOrder = async (req, res) => {
             phone,
             email,
             date,
-            cakes,
-            breads,
-            minidonuts,
+            products,
             user_message,
             url
         });
@@ -28,3 +26,4 @@ const createOrder = async (req, res) => {
 module.exports = {
     createOrder,
 };
+
