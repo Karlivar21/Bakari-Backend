@@ -4,8 +4,15 @@ import Order from '../models/Order.js';
 
 const router = express.Router();
 
-// Set up multer for file storage
-const storage = multer.memoryStorage(); // or diskStorage if saving files to disk
+// Set up multer for file storage (Disk Storage Example)
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/'); // Adjust the path as needed
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now() + '-' + file.originalname);
+    }
+});
 const upload = multer({ 
     storage, 
     limits: { fileSize: 50 * 1024 * 1024 } // Limit file size to 50MB
@@ -30,8 +37,7 @@ router.post('/', upload.single('image'), async (req, res) => {
         let imageUrl = null;
         if (req.file) {
             // Save the image to your storage and set imageUrl accordingly
-            // Example: Save to disk storage or cloud storage and set the URL
-            imageUrl = req.file.buffer; // For in-memory storage; adjust based on your setup
+            imageUrl = req.file.path; // For disk storage; adjust as necessary for cloud storage
         }
 
         // Parse products
