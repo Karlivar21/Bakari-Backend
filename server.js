@@ -6,6 +6,7 @@ import soupPlanRoute from './routes/soupPlan.js';
 import authRoutes from './routes/authRoutes.js'; // Import auth routes
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
+import multer from 'multer';
 
 const app = express();
 
