@@ -14,7 +14,7 @@ const createOrder = async (req, res) => {
             date,
             products,
             user_message,
-            url
+            payed
         });
 
         await newOrder.save();
