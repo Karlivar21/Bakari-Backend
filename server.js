@@ -9,6 +9,7 @@ import { WebSocketServer } from 'ws';
 
 const app = express();
 
+
 // Connect to database
 connectDB();
 
@@ -28,7 +29,15 @@ const corsOptions = {
   };
 
 app.use(cors(corsOptions));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Adjust multer limits for file size (if using multer)
+const storage = multer.memoryStorage(); // or diskStorage
+const upload = multer({ 
+    storage, 
+    limits: { fileSize: 50 * 1024 * 1024 } // Limit file size to 50MB
+});
 // Handle preflight requests
 app.options('*', cors(corsOptions));
 
