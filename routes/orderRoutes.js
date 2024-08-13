@@ -68,7 +68,7 @@ router.post('/', upload.single('image'), async (req, res) => {
             products: parsedProducts,
             user_message,
             payed,
-            image
+            imageUrl
         });
 
         await newOrder.save();
