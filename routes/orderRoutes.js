@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
 // POST route for creating an order
 router.post('/', upload.single('image'), async (req, res) => {
     try {
-        const { id, name, phone, email, date, products, user_message, payed } = req.body;
+        const { id, name, phone, email, date, products, user_message, payed, image } = req.body;
 
         // Handle file if uploaded
         let imageUrl = null;
@@ -68,7 +68,7 @@ router.post('/', upload.single('image'), async (req, res) => {
             products: parsedProducts,
             user_message,
             payed,
-            'image': imageUrl
+            image
         });
 
         await newOrder.save();
