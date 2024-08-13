@@ -14,10 +14,12 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const { name, email, message } = req.body;
+        const { id, name, phone, email, message } = req.body;
 
         const newComment = new Comment({
+            id,
             name,
+            phone,
             email,
             message
         });
