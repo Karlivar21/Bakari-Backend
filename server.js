@@ -4,6 +4,7 @@ import connectDB from './config/db.js';
 import orderRoutes from './routes/orderRoutes.js';
 import soupPlanRoute from './routes/soupPlan.js';
 import authRoutes from './routes/authRoutes.js'; // Import auth routes
+import commentRoutes from './routes/commentRoutes.js'; // Import comment routes
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import multer from 'multer';
@@ -48,6 +49,7 @@ app.use((req, res, next) => {
 app.use('/api/orders', orderRoutes);
 app.use('/api/soupPlan', soupPlanRoute);
 app.use('/api/auth', authRoutes); // Use auth routes
+app.use('/api/comments', commentRoutes); // Use comment routes
 
 // Start the server
 const server = app.listen(process.env.PORT || 5010, () => {
