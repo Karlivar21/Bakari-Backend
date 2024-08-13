@@ -22,7 +22,19 @@ const upload = multer({
 router.get('/', async (req, res) => {
     try {
         const orders = await Order.find();
-        res.json(orders);
+
+        // Construct the full image URL for each order
+        const baseUrl = 'https://api.kallabakari.is/uploads/'; // Base URL for your images
+        
+        const ordersWithImageUrls = orders.map(order => {
+            if (order.details && order.details.image) {
+                // Append the base URL to the image path
+                order.details.imageUrl = baseUrl + path.basename(order.details.image);
+            }
+            return order;
+        });
+
+        res.json(ordersWithImageUrls);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching orders', error });
     }
@@ -65,5 +77,34 @@ router.post('/', upload.single('image'), async (req, res) => {
         res.status(400).json({ message: 'Error creating order', error });
     }
 });
+
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedOrder = await Order.findOneAndDelete({ id });
+
+        if (!deletedOrder) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        // Optionally, you can also remove the associated image file
+        if (deletedOrder.details && deletedOrder.details.image) {
+            const fs = require('fs');
+            const imagePath = deletedOrder.details.image;
+            fs.unlink(imagePath, (err) => {
+                if (err) {
+                    console.error('Error deleting image:', err);
+                } else {
+                    console.log('Image deleted:', imagePath);
+                }
+            });
+        }
+
+        res.status(200).json({ message: 'Order deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting order', error });
+    }
+});
+
 
 export default router;
