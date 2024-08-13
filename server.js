@@ -7,10 +7,8 @@ import authRoutes from './routes/authRoutes.js'; // Import auth routes
 import commentRoutes from './routes/commentRoutes.js'; // Import comment routes
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
-import multer from 'multer';
 
 const app = express();
-
 
 // Connect to database
 connectDB();
@@ -37,7 +35,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Handle preflight requests
 app.options('*', cors(corsOptions));
 
-app.use(express.json());
+
 
 // Debugging log to verify routes
 app.use((req, res, next) => {
