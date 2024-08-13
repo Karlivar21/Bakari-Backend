@@ -16,6 +16,10 @@ router.post('/', async (req, res) => {
     try {
         const { id, name, phone, email, message } = req.body;
 
+        if (!name || !email || !message) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+
         const newComment = new Comment({
             id,
             name,
