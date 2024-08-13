@@ -28,3 +28,5 @@ router.post('/', async (req, res) => {
         res.status(400).json({ message: 'Error creating comment', error });
     }
 });
+
+export default router;
