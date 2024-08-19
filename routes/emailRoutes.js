@@ -9,11 +9,11 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: 'kallabakari.pantanir@gmail.com', // Your Gmail address
-    pass: 'AKD990205' // Your Gmail app password or password (use app password for security)
+    pass: 'laje anjw zzcv rrhe' // Your Gmail app password or password (use app password for security)
   }
 });
 
-router.post('/', (req, res) => {
+router.post('/', (req, res) => { 
   const { email, orderId } = req.body;
 
   const mailOptions = {
