@@ -15,11 +15,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const { id, name, phone, email, message } = req.body;
-        console.log(req.body);  
-        if (!name || !email || !message) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
-
+        console.log('req.body', req.body);  
+        
         const newComment = new Comment({
             id,
             name,
@@ -29,6 +26,7 @@ router.post('/', async (req, res) => {
         });
 
         await newComment.save();
+        console.log('newComment', newComment);
         res.status(201).json({ message: 'Comment created', comment: newComment });
     } catch (error) {
         res.status(400).json({ message: 'Error creating comment', error });
