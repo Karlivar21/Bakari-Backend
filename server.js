@@ -49,7 +49,9 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/soupPlan', soupPlanRoute);
 app.use('/api/auth', authRoutes); // Use auth routes
 app.use('/api/comments', commentRoutes); // Use comment routes
+app.use('/api/uploads', express.static('uploads')); // Serve uploaded files
 app.use('/send-order-email', emailRoutes);
+
 // Start the server
 const server = app.listen(process.env.PORT || 5010, () => {
   console.log(`Server is running on port ${server.address().port}`);
