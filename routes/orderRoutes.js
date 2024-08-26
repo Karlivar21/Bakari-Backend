@@ -25,9 +25,6 @@ router.get('/', async (req, res) => {
 
         // Construct the full image URL for each order
         const baseUrl = 'https://api.kallabakari.is/uploads/'; // Base URL for your images
-        console.log('orders', orders);
-        console.log('products', orders[16].products);
-        console.log('order11', orders[16].file);
         const ordersWithImageUrls = orders.map(order => {
             if (order.file) {
                 // Append the base URL to the image path
@@ -46,7 +43,7 @@ router.get('/', async (req, res) => {
 router.post('/', upload.single('image'), async (req, res) => {
     try {
         const { id, name, phone, email, date, products, user_message, payed, image } = req.body;
-
+        console.log('Request body:', req.body);
         // Handle file if uploaded
         let imageUrl = null;
         if (req.file) {
