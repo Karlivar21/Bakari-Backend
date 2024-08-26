@@ -1,34 +1,40 @@
-// server.js
 import express from 'express';
-import nodemailer from 'nodemailer';
+import Mailjet from 'node-mailjet';
 
 const router = express.Router();
 
-// Configure Nodemailer with Gmail
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'kallabakari.pantanir@gmail.com', // Your Gmail address
-    pass: 'zfoxlpbdrkhltfmh' // Your Gmail app password or password (use app password for security)
-  }
-});
+// Initialize Mailjet client
+const mailjet = Mailjet.apiConnect('3ac0f68ea6606e9bc0447c088ce1cdaa', '218791fefdda48f329e30e58d991a0e5');
 
-router.post('/', (req, res) => { 
-  const { email, orderId } = req.body;
+// Route to send email
+router.post('/', async (req, res) => {
+  const { to, subject, text, html } = req.body;
 
-  const mailOptions = {
-    from: 'kallabakari.pantanir@gmail.com',
-    to: email,
-    subject: 'Order Confirmation',
-    text: `Thank you for your order! Your order ID is ${orderId}.`
+  const request = {
+    Messages: [
+      {
+        From: {
+          Email: "noreply@kallabakari.is",
+          Name: "Kallabakarí"
+        },
+        To: [
+          {
+            Email: to
+          }
+        ],
+        Subject: subject,
+        TextPart: text,
+        HTMLPart: html
+      }
+    ]
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      return res.status(500).send(error.toString());
-    }
-    res.status(200).send('Email sent: ' + info.response);
-  });
+  try {
+    const response = await mailjet.post('send', { version: 'v3.1' }).request(request);
+    res.status(200).json(response.body);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 export default router;
