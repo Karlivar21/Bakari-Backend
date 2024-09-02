@@ -15,7 +15,8 @@ const orderSchema = new mongoose.Schema({
     date: { type: Date, required: true },
     products: [productSchema], // Array of generic products
     user_message: { type: String },
-    payed: { type: Boolean, default: false }
+    payed: { type: Boolean, default: false },
+    image: { type: String }
 });
 
 const Order = mongoose.model('Order', orderSchema);
