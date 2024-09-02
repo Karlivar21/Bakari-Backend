@@ -9,7 +9,11 @@ import cors from 'cors';
 import emailRoutes from './routes/emailRoutes.js';
 import downloadRoutes from './routes/downloadRoutes.js';
 import { WebSocketServer } from 'ws';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const app = express();
 
 // Connect to database
