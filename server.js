@@ -52,6 +52,7 @@ app.use('/api/soupPlan', soupPlanRoute);
 app.use('/api/auth', authRoutes); // Use auth routes
 app.use('/api/comments', commentRoutes); // Use comment routes
 app.use('/api/send-order-email', emailRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/download/:orderId', downloadRoutes);
 
 // Start the server
