@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes.js'; // Import auth routes
 import commentRoutes from './routes/commentRoutes.js'; // Import comment routes
 import cors from 'cors';
 import emailRoutes from './routes/emailRoutes.js';
+import downloadRoutes from './routes/downloadRoutes.js';
 import { WebSocketServer } from 'ws';
 
 const app = express();
@@ -50,8 +51,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/soupPlan', soupPlanRoute);
 app.use('/api/auth', authRoutes); // Use auth routes
 app.use('/api/comments', commentRoutes); // Use comment routes
-// app.use('/api/uploads', express.static('uploads')); // Serve uploaded files
 app.use('/api/send-order-email', emailRoutes);
+app.use('/download/:orderId', downloadRoutes);
 
 // Start the server
 const server = app.listen(process.env.PORT || 5010, () => {

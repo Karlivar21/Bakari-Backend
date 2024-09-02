@@ -43,7 +43,6 @@ router.get('/', async (req, res) => {
 router.post('/', upload.single('image'), async (req, res) => {
     try {
         const { id, name, phone, email, date, products, user_message, payed, image } = req.body;
-        console.log('Request body:', req.body);
         // Handle file if uploaded
         let imageUrl = null;
         if (req.file) {
@@ -67,7 +66,7 @@ router.post('/', upload.single('image'), async (req, res) => {
             products: parsedProducts,
             user_message,
             payed,
-            imageUrl
+            image: imageUrl
         });
 
         await newOrder.save();
