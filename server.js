@@ -8,9 +8,12 @@ import commentRoutes from './routes/commentRoutes.js'; // Import comment routes
 import cors from 'cors';
 import emailRoutes from './routes/emailRoutes.js';
 import downloadRoutes from './routes/downloadRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 import { WebSocketServer } from 'ws';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,6 +61,7 @@ app.use('/api/comments', commentRoutes); // Use comment routes
 app.use('/api/send-order-email', emailRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/download/:orderId', downloadRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Start the server
 const server = app.listen(process.env.PORT || 5010, () => {
