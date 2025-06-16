@@ -76,6 +76,39 @@ router.post('/', upload.single('image'), async (req, res) => {
     }
 });
 
+// PUT route for updating an order
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, phone, email, date, products, user_message, payed } = req.body;
+
+        const updateData = {
+            name,
+            phone,
+            email,
+            date: new Date(date),
+            products,
+            user_message,
+            payed
+        };
+
+        const updatedOrder = await Order.findOneAndUpdate(
+            { id },        // Find by order id
+            updateData,    // New data to update
+            { new: true }  // Return the updated document
+        );
+
+        if (!updatedOrder) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        res.status(200).json({ message: 'Order updated successfully', order: updatedOrder });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating order', error });
+    }
+});
+
+
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
