@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import Order from '../models/Order.js';
+import { calculateTotalISK } from '../utils/pricing.js';
 
 const router = express.Router();
 
@@ -56,6 +57,9 @@ router.post('/', upload.single('image'), async (req, res) => {
             parsedProducts = JSON.parse(products);
         }
 
+        // Calculate total amount
+        const totalAmount = calculateTotalISK(parsedProducts);
+
         // Create new order
         const newOrder = new Order({
             id,
@@ -66,7 +70,8 @@ router.post('/', upload.single('image'), async (req, res) => {
             products: parsedProducts,
             user_message,
             payed,
-            image
+            image,
+            totalAmount
         });
 
         await newOrder.save();

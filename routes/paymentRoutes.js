@@ -86,7 +86,11 @@ router.post("/teya/checkout-session", async (req, res) => {
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ error: "Order not found" });
 
-    const amountMinor = Math.round(order.totalPrice);
+    const amountMinor = order.totalAmount;
+    if (!Number.isFinite(amountMinor) || amountMinor <= 0) {
+      return res.status(400).json({ error: "Order totalAmount missing/invalid" });
+    }
+
     const currency = "ISK";
 
     const token = await getTeyaAccessToken();
