@@ -95,14 +95,30 @@ router.post("/teya/checkout-session", async (req, res) => {
 
     const token = await getTeyaAccessToken();
 
-    const payload = {
-      reference: String(order._id),
-      transactionType: "PURCHASE",
-      amount: { value: amountMinor, currency: "ISK" },
-      redirectUrls: {
-        successUrl: `https://kallabakari.is/order/success?orderId=${order._id}`,
-        cancelUrl: `https://kallabakari.is/cart`,
+        const payload = {
+      // ✅ per docs
+      amount: { currency: "ISK", value: amountValue },
+      type: "SALE",
+      success_url: `https://kallabakari.is/order/success?orderId=${order._id}`,
+      cancel_url: `https://kallabakari.is/cart`,
+      failure_url: `https://kallabakari.is/order/error?orderId=${order._id}`,
+
+      // ✅ recommended
+      merchant_reference: String(order._id),
+
+      // ✅ include store_id since you have it
+      store_id: process.env.STORE_ID,
+
+      // optional: prefills
+      customer: {
+        name: order.name,
+        email: order.email,
+        phone_number: order.phone, // only if in E.164 format; otherwise remove
       },
+
+      // optional:
+      // language: "is-IS",
+      // post_success_payment: "REDIRECT",
     };
 
     if (!TEYA_API_BASE || !TEYA_CHECKOUT_SESSIONS_PATH) {
