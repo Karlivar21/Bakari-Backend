@@ -2,6 +2,8 @@
 import express from "express";
 import Order from '../models/Order.js';
 import mongoose from "mongoose";
+import crypto from "crypto";
+
 
 
 const router = express.Router();
@@ -140,6 +142,7 @@ router.post("/teya/checkout-session", async (req, res) => {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
+        "Idempotency-Key": crypto.randomUUID(),
         "X-Store-Id": process.env.STORE_ID,
       },
       body: JSON.stringify(payload),
