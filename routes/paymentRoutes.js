@@ -1,6 +1,8 @@
 // routes/paymentRoutes.js
 import express from "express";
 import Order from '../models/Order.js';
+import mongoose from "mongoose";
+
 
 const router = express.Router();
 
@@ -77,42 +79,29 @@ router.post("/teya/checkout-session", async (req, res) => {
     const { orderId } = req.body;
 
     if (!orderId) return res.status(400).json({ error: "Missing orderId" });
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({ error: "Invalid orderId" });
+    }
 
-    // 1) Load your order from DB
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ error: "Order not found" });
 
-    // IMPORTANT: ensure you compute totals server-side (never trust frontend totals)
-    // You need amount in "minor units" (e.g. ISK uses 0 decimals, so 1290 means 1290 ISK)
-    const amountMinor = Math.round(order.totalPrice); // adjust if your schema stores cents/aurar etc.
+    const amountMinor = Math.round(order.totalPrice);
     const currency = "ISK";
 
-    // 2) Token
     const token = await getTeyaAccessToken();
 
-    // 3) Build Hosted Checkout session payload
-    // ⚠️ Replace body fields to match the exact Teya spec from their "Checkout Sessions create" endpoint
     const payload = {
-      reference: String(order._id), // so you can reconcile in webhook
-      amount: {
-        value: amountMinor,
-        currency,
-      },
-
-      // Your redirect URLs:
+      transactionType: "PURCHASE",
+      reference: String(order._id),
+      amount: { value: amountMinor, currency },
       successUrl: `https://kallabakari.is/order/success?orderId=${order._id}`,
       cancelUrl: `https://kallabakari.is/cart`,
-
-      // Optional: customer details (if you have them)
-      // customer: { email: order.email },
-
-      // Optional: items, description, locale, etc. (per Teya docs)
     };
 
     if (!TEYA_API_BASE || !TEYA_CHECKOUT_SESSIONS_PATH) {
       return res.status(500).json({
-        error:
-          "Missing TEYA_API_BASE or TEYA_CHECKOUT_SESSIONS_PATH env var (set them from Teya API docs).",
+        error: "Missing TEYA_API_BASE or TEYA_CHECKOUT_SESSIONS_PATH env var",
       });
     }
 
@@ -123,19 +112,23 @@ router.post("/teya/checkout-session", async (req, res) => {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
+        "X-Store-Id": process.env.STORE_ID,
       },
       body: JSON.stringify(payload),
     });
 
     if (!teyaRes.ok) {
       const t = await teyaRes.text();
-      console.error("Teya create session error:", t);
-      return res.status(502).json({ error: "Teya session creation failed" });
+      console.error("Teya create session error:", teyaRes.status, teyaRes.statusText, t);
+      return res.status(502).json({
+        error: "Teya session creation failed",
+        teyaStatus: teyaRes.status,
+        teyaBody: t,
+      });
     }
 
     const session = await teyaRes.json();
 
-    // ⚠️ Replace 'checkoutUrl' with the actual response field name from Teya
     const redirectUrl = session.checkoutUrl || session.url || session.redirectUrl;
     const sessionId = session.id;
 
@@ -144,7 +137,6 @@ router.post("/teya/checkout-session", async (req, res) => {
       return res.status(502).json({ error: "Teya did not return redirect URL" });
     }
 
-    // Save session id on the order (recommended)
     order.paymentProvider = "teya";
     order.paymentSessionId = sessionId;
     order.paymentStatus = "PENDING";
