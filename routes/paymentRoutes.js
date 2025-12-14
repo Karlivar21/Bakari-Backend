@@ -1,7 +1,6 @@
 // routes/paymentRoutes.js
 import express from "express";
-import fetch from "node-fetch"; // if you're on Node 18+, you can remove this and use global fetch
-import Order from "../models/Order.js"; // adjust path/name to your Order model
+import Order from '../models/Order.js';
 
 const router = express.Router();
 
