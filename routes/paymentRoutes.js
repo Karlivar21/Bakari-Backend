@@ -90,6 +90,9 @@ router.post("/teya/checkout-session", async (req, res) => {
     if (!Number.isFinite(amountMinor) || amountMinor <= 0) {
       return res.status(400).json({ error: "Order totalAmount missing/invalid" });
     }
+    // after: const order = await Order.findById(orderId);
+
+
 
     const currency = "ISK";
 
@@ -97,7 +100,7 @@ router.post("/teya/checkout-session", async (req, res) => {
 
         const payload = {
       // ✅ per docs
-      amount: { currency: "ISK", value: amountValue },
+      amount: { currency: "ISK", value: amountMinor },
       type: "SALE",
       success_url: `https://kallabakari.is/order/success?orderId=${order._id}`,
       cancel_url: `https://kallabakari.is/cart`,
