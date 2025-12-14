@@ -1,8 +1,6 @@
 // routes/paymentRoutes.js
 import express from "express";
 import Order from '../models/Order.js';
-import mongoose from "mongoose";
-
 
 const router = express.Router();
 
@@ -115,6 +113,9 @@ router.post("/teya/checkout-session", async (req, res) => {
     }
 
     const url = `${TEYA_API_BASE}${TEYA_CHECKOUT_SESSIONS_PATH}`;
+    console.log("TEYA URL:", url);
+    console.log("TEYA STORE:", process.env.STORE_ID);
+    console.log("TEYA PAYLOAD:", JSON.stringify(payload, null, 2));
 
     const teyaRes = await fetch(url, {
       method: "POST",
