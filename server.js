@@ -39,7 +39,12 @@ const corsOptions = {
   };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf; // needed for webhook signature verification
+  }
+}));
+
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Handle preflight requests
