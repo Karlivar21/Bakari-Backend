@@ -98,7 +98,7 @@ router.post("/teya/checkout-session", async (req, res) => {
 
     const token = await getTeyaAccessToken();
 
-        const payload = {
+      const payload = {
       // ✅ per docs
       amount: { currency: "ISK", value: amountMinor },
       type: "SALE",
@@ -116,7 +116,7 @@ router.post("/teya/checkout-session", async (req, res) => {
       customer: {
         name: order.name,
         email: order.email,
-        phone_number: order.phone, // only if in E.164 format; otherwise remove
+        phone_number: "+354"+order.phone, // only if in E.164 format; otherwise remove
       },
 
       // optional:
