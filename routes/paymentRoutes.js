@@ -160,8 +160,11 @@ router.post("/teya/checkout-session", async (req, res) => {
 
     const session = await teyaRes.json();
 
-    const redirectUrl = session.checkoutUrl || session.url || session.redirectUrl;
-    const sessionId = session.id;
+
+
+    const redirectUrl = session.session_url || session.checkoutUrl || session.url || session.redirectUrl;
+    const sessionId = session.session_id || session.sessionId || session.id;
+
 
     if (!redirectUrl) {
       console.error("Unexpected Teya session response:", session);
