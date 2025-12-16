@@ -10,6 +10,21 @@ function normalizeSize(size) {
     .trim(); // "20", "12-15", "6-8"
 }
 
+function bitePriceISK(details) {
+  const id = details?.id;
+  const qty = Number(details?.quantity);
+
+  if (!id) throw new Error("Bite id missing");
+  const unit = PRICES.smarettir?.[id];
+  if (!unit) throw new Error(`Unknown bite id: ${id}`);
+
+  if (!Number.isFinite(qty) || qty <= 0) {
+    throw new Error(`Invalid bite quantity: ${details?.quantity}`);
+  }
+
+  return unit * qty;
+}
+
 function cakePriceISK(details) {
   const cakeName = details?.cake;
   if (!cakeName) throw new Error("Cake name missing");
@@ -72,6 +87,7 @@ export function calculateTotalISK(products) {
     if (p.type === "cake") total += cakePriceISK(p.details);
     else if (p.type === "bread") total += breadPriceISK(p.details);
     else if (p.type === "minidonut") total += minidonutsPriceISK(p.details);
+    else if (p.type === "bite") total += bitePriceISK(p.details);   // ✅ ADD THIS
     else throw new Error(`Unknown product type: ${p.type}`);
   }
   return total;

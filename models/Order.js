@@ -17,7 +17,12 @@ const orderSchema = new mongoose.Schema({
     products: [productSchema], // Array of generic products
     user_message: { type: String },
     payed: { type: Boolean, default: false },
-    image: { type: String }
+    image: { type: String },
+    paymentStatus: { type: String, enum: ["pending", "paid", "failed", "cancelled"], default: "pending" },
+    checkoutSessionId: { type: String },
+    paidAt: { type: Date },
+    emailSentAt: { type: Date },
+
 });
 
 const Order = mongoose.model('Order', orderSchema);
