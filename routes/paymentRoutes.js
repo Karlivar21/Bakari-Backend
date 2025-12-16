@@ -186,63 +186,75 @@ router.post("/teya/checkout-session", async (req, res) => {
 /**
  * 2) Webhook endpoint
  * Configure this URL in Teya Business Portal:
- *   https://kallabakari.is/api/payment/teya/webhook
+ *   https://api.kallabakari.is/api/payment/teya/webhook
  */
 router.post("/teya/webhook", async (req, res) => {
   try {
-    // If Teya provides signature headers + a signing secret, verify here using:
-    // - req.rawBody (from your server.js verify hook)
-    // - signature header(s)
-    // - TEYA_WEBHOOK_SECRET
-    //
-    // Because I don’t have Teya’s exact signature scheme from the snippet, I’m leaving verification as a TODO.
-    // DO NOT skip verification in production if Teya supports it.
-
     const event = req.body;
 
-    // ⚠️ Adjust these fields to match Teya webhook payload structure
     const eventType = event.type || event.eventType;
-    const reference = event.data?.reference || event.reference;
-    const paymentId = event.data?.id || event.paymentId;
 
-    if (!eventType) {
-      return res.status(400).send("Missing event type");
+    // Try all likely places for your order reference
+    const merchantRef =
+      event.data?.merchant_reference ||
+      event.merchant_reference ||
+      event.data?.merchantReference;
+
+    const sessionId =
+      event.data?.session_id ||
+      event.session_id ||
+      event.data?.sessionId;
+
+    const paymentId =
+      event.data?.payment_id ||
+      event.data?.id ||
+      event.payment_id;
+
+    // Find order
+    let order = null;
+    if (merchantRef && mongoose.Types.ObjectId.isValid(merchantRef)) {
+      order = await Order.findById(merchantRef);
+    }
+    if (!order && sessionId) {
+      order = await Order.findOne({ paymentSessionId: sessionId });
     }
 
-    // Handle “Payment Succeeded”
-    // ⚠️ exact string depends on Teya; you mentioned “Payment Succeeded” in portal
-    const isPaymentSucceeded =
+    if (!order) {
+      console.warn("Teya webhook: order not found", { merchantRef, sessionId });
+      return res.status(200).send("ok");
+    }
+
+    // Handle payment success
+    const isSuccess =
       eventType === "payment.succeeded" ||
       eventType === "PAYMENT_SUCCEEDED" ||
       eventType === "Payment Succeeded";
 
-    if (isPaymentSucceeded && reference) {
-      const order = await Order.findById(reference);
-      if (!order) {
-        // return 200 to avoid retries if order already deleted, but log it
-        console.warn("Webhook: order not found for reference:", reference);
-        return res.status(200).send("ok");
-      }
+    if (!isSuccess) return res.status(200).send("ok");
 
-      // Idempotency: if already paid, do nothing
-      if (order.isPaid) {
-        return res.status(200).send("ok");
-      }
+    // Idempotency: already paid → do nothing
+    if (order.paymentStatus === "PAID") {
+      return res.status(200).send("ok");
+    }
 
-      order.isPaid = true;
-      order.paidAt = new Date();
-      order.paymentStatus = "SUCCEEDED";
-      order.paymentProvider = "teya";
-      order.paymentId = paymentId;
+    // Mark order paid
+    order.paymentStatus = "PAID";
+    order.paidAt = new Date();
+    order.paymentProvider = "teya";
+    order.paymentId = paymentId;
 
+    await order.save();
+
+    // Send confirmation email ONLY NOW
+    if (!order.emailSentAt) {
+      await sendOrderEmailBackend(order);
+      order.emailSentAt = new Date();
       await order.save();
     }
 
     return res.status(200).send("ok");
   } catch (err) {
-    console.error("Webhook error:", err);
+    console.error("Teya webhook error:", err);
     return res.status(500).send("error");
   }
 });
-
-export default router;

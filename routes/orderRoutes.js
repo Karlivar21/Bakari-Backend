@@ -25,14 +25,14 @@ router.get('/', async (req, res) => {
         const orders = await Order.find();
 
         // Construct the full image URL for each order
-        const baseUrl = 'https://api.kallabakari.is/uploads/'; // Base URL for your images
-        const ordersWithImageUrls = orders.map(order => {
-            if (order.file) {
-                // Append the base URL to the image path
-                order.file = baseUrl + order.file;
-            }
-            return order;
-        });33
+       const baseUrl = 'https://api.kallabakari.is/uploads/';
+       const ordersWithImageUrls = orders.map(order => {
+       if (order.image) {
+            order.image = baseUrl + order.image;
+        }
+       return order;
+        });
+
 
         res.json(ordersWithImageUrls);
     } catch (error) {
