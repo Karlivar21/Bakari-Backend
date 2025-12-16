@@ -1,7 +1,6 @@
 import express from 'express';
 import multer from 'multer';
 import Order from '../models/Order.js';
-import { calculateTotalISK } from '../utils/pricing.js';
 
 const router = express.Router();
 
@@ -25,14 +24,14 @@ router.get('/', async (req, res) => {
         const orders = await Order.find();
 
         // Construct the full image URL for each order
-       const baseUrl = 'https://api.kallabakari.is/uploads/';
-       const ordersWithImageUrls = orders.map(order => {
-       if (order.image) {
-            order.image = baseUrl + order.image;
-        }
-       return order;
-        });
-
+        const baseUrl = 'https://api.kallabakari.is/uploads/'; // Base URL for your images
+        const ordersWithImageUrls = orders.map(order => {
+            if (order.file) {
+                // Append the base URL to the image path
+                order.file = baseUrl + order.file;
+            }
+            return order;
+        });33
 
         res.json(ordersWithImageUrls);
     } catch (error) {
@@ -57,9 +56,6 @@ router.post('/', upload.single('image'), async (req, res) => {
             parsedProducts = JSON.parse(products);
         }
 
-        // Calculate total amount
-        const totalAmount = calculateTotalISK(parsedProducts);
-
         // Create new order
         const newOrder = new Order({
             id,
@@ -70,8 +66,7 @@ router.post('/', upload.single('image'), async (req, res) => {
             products: parsedProducts,
             user_message,
             payed,
-            image,
-            totalAmount
+            image
         });
 
         await newOrder.save();
