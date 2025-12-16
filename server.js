@@ -48,8 +48,8 @@ app.use(express.json({
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Handle preflight requests
+app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-
 
 
 // Debugging log to verify routes
