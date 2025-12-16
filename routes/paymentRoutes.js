@@ -258,3 +258,5 @@ router.post("/teya/webhook", async (req, res) => {
     return res.status(500).send("error");
   }
 });
+
+export default router;
