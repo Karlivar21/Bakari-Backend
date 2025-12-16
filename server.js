@@ -38,7 +38,6 @@ const corsOptions = {
     optionsSuccessStatus: 204 // For legacy browser support
   };
 
-app.use(cors(corsOptions));
 app.use(express.json({
   verify: (req, res, buf) => {
     req.rawBody = buf; // needed for webhook signature verification
