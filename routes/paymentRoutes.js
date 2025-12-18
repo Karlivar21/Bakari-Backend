@@ -173,7 +173,7 @@ router.post("/teya/checkout-session", async (req, res) => {
 
     order.paymentProvider = "teya";
     order.paymentSessionId = sessionId;
-    order.paymentStatus = "PENDING";
+    order.paymentStatus = "pending";
     await order.save();
 
     return res.json({ redirectUrl, sessionId });
@@ -233,12 +233,12 @@ router.post("/teya/webhook", async (req, res) => {
     if (!isSuccess) return res.status(200).send("ok");
 
     // Idempotency: already paid → do nothing
-    if (order.paymentStatus === "PAID") {
+    if (order.paymentStatus === "paid") {
       return res.status(200).send("ok");
     }
 
     // Mark order paid
-    order.paymentStatus = "PAID";
+    order.paymentStatus = "paid";
     order.paidAt = new Date();
     order.paymentProvider = "teya";
     order.paymentId = paymentId;
