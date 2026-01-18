@@ -1,4 +1,4 @@
-import PRICES from "../data/prices.json" assert { type: "json" };
+import PRICES from "../data/prices.json" with { type: "json" };
 
 function normalizeSize(size) {
   // input examples: "20 manna", "12-15 manna", "16 manna"
