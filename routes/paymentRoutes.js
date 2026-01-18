@@ -105,7 +105,7 @@ router.post("/teya/checkout-session", async (req, res) => {
       amount: { currency: "ISK", value: amountMinor },
       type: "SALE",
       success_url: `https://kallabakari.is/order/success?orderId=${order._id}`,
-      cancel_url: `https://kallabakari.is/cart`,
+      cancel_url: `https://kallabakari.is/pantanir`,
       failure_url: `https://kallabakari.is/order/error?orderId=${order._id}`,
 
       // ✅ recommended
