@@ -105,7 +105,7 @@ router.post("/teya/checkout-session", async (req, res) => {
       amount: { currency: "ISK", value: amountMinor },
       type: "SALE",
       success_url: `https://kallabakari.is/order/success?orderId=${order._id}`,
-      cancel_url: `https://kallabakari.is/pantanir`,
+      cancel_url: `https://kallabakari.is/order/cancel?orderId=${order._id}`,
       failure_url: `https://kallabakari.is/order/error?orderId=${order._id}`,
 
       // ✅ recommended
@@ -172,7 +172,7 @@ router.post("/teya/checkout-session", async (req, res) => {
     }
 
     order.paymentProvider = "teya";
-    order.paymentSessionId = sessionId;
+    order.checkoutSessionId = sessionId;
     order.paymentStatus = "pending";
     await order.save();
 
@@ -216,8 +216,9 @@ router.post("/teya/webhook", async (req, res) => {
       order = await Order.findById(merchantRef);
     }
     if (!order && sessionId) {
-      order = await Order.findOne({ paymentSessionId: sessionId });
+      order = await Order.findOne({ checkoutSessionId: sessionId });
     }
+
 
     if (!order) {
       console.warn("Teya webhook: order not found", { merchantRef, sessionId });
@@ -239,10 +240,9 @@ router.post("/teya/webhook", async (req, res) => {
 
     // Mark order paid
     order.paymentStatus = "paid";
+    order.payed = true;
     order.paidAt = new Date();
-    order.paymentProvider = "teya";
-    order.paymentId = paymentId;
-
+    order.paymentId = paymentId || null;
     await order.save();
 
     // Send confirmation email ONLY NOW

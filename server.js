@@ -13,6 +13,8 @@ import { WebSocketServer } from 'ws';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import Order from "./models/Order.js";
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,7 +22,33 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // Connect to database
+// Connect to database
 connectDB();
+
+// ✅ Auto-expire pending orders every 5 minutes
+setInterval(async () => {
+  try {
+    const result = await Order.updateMany(
+      {
+        paymentStatus: "pending",
+        createdAt: { $lt: new Date(Date.now() - 30 * 60 * 1000) }, // 30 min
+      },
+      {
+        $set: {
+          paymentStatus: "expired",
+          payed: false,
+        },
+      }
+    );
+
+    if (result.modifiedCount > 0) {
+      console.log("Expired orders:", result.modifiedCount);
+    }
+  } catch (err) {
+    console.error("Expire job failed:", err);
+  }
+}, 5 * 60 * 1000); // every 5 minutes
+
 
 // Use CORS middleware
 const corsOptions = {
