@@ -198,7 +198,17 @@ function verifyTeyaSignature({ rawBody, signatureB64, publicKeyPem }) {
 
 router.post(
   "/teya/webhook",
+
   // IMPORTANT: raw body so signature verification works
+  console.log("✅ TEYA WEBHOOK HIT", {
+  time: new Date().toISOString(),
+  headers: {
+    "content-type": req.headers["content-type"],
+    "teya-signature": req.headers["teya-signature"],
+    "x-teya-signature": req.headers["x-teya-signature"],
+  },
+  }),
+
   express.raw({ type: "application/json" }),
   async (req, res) => {
     try {
