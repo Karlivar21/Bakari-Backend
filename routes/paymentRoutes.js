@@ -181,13 +181,17 @@ router.post("/teya/checkout-session", async (req, res) => {
     return res.status(500).json({ error: "Server error creating checkout session" });
   }
 });
+
+
 function verifyTeyaSignature({ rawBody, signatureB64, publicKeyPem }) {
-  if (!signatureB64 || !publicKeyPem) return false;
+  if (!rawBody || !signatureB64 || !publicKeyPem) return false;
 
-  const signature = Buffer.from(String(signatureB64), "base64");
-
-  // Most common: RSA + SHA256 over raw body bytes
-  return crypto.verify("RSA-SHA256", rawBody, publicKeyPem, signature);
+  try {
+    const signature = Buffer.from(String(signatureB64), "base64");
+    return crypto.verify("RSA-SHA256", rawBody, publicKeyPem, signature);
+  } catch (e) {
+    return false;
+  }
 }
 
 /**
@@ -196,55 +200,55 @@ function verifyTeyaSignature({ rawBody, signatureB64, publicKeyPem }) {
  *   https://api.kallabakari.is/api/payment/teya/webhook
  */
 
+
 router.post("/teya/webhook", async (req, res) => {
   try {
-    // Robust parsing:
-    let event = req.body;
+    // ✅ Express already parsed JSON
+    const event = req.body;
 
-    if (Buffer.isBuffer(req.body)) {
-      const text = req.body.toString("utf8");
-      try {
-        event = JSON.parse(text);
-      } catch (e) {
-        console.error("Teya webhook: invalid JSON (buffer)", text.slice(0, 300));
-        return res.status(400).send("invalid json");
-      }
-    } else if (typeof req.body === "string") {
-      try {
-        event = JSON.parse(req.body);
-      } catch (e) {
-        console.error("Teya webhook: invalid JSON (string)", req.body.slice(0, 300));
-        return res.status(400).send("invalid json");
-      }
-    } else if (!event || typeof event !== "object") {
-      console.error("Teya webhook: empty/unexpected body type", typeof req.body);
-      return res.status(400).send("invalid body");
-    }
-
-    // Helpful logs (temporarily)
-    console.log("TEYA webhook parsed:", {
-      type: event?.type || event?.eventType || event?.name,
+    // TEMP: log what Teya actually sends (remove later)
+    console.log("✅ TEYA WEBHOOK RECEIVED", {
+      contentType: req.headers["content-type"],
+      eventType: event?.type || event?.eventType || event?.name,
+      hasRawBody: !!req.rawBody,
     });
 
-    const eventType = event.type || event.eventType || event.name;
+    // ✅ If you want signature verification:
+    const shouldVerify = process.env.TEYA_VERIFY_WEBHOOK === "true";
+    if (shouldVerify) {
+      const signatureHeader =
+        req.headers["teya-signature"] ||
+        req.headers["x-teya-signature"] ||
+        req.headers["signature"];
+
+      const ok = verifyTeyaSignature({
+        rawBody: req.rawBody, // Buffer from your express.json verify hook
+        signatureB64: signatureHeader,
+        publicKeyPem: process.env.TEYA_WEBHOOK_PUBLIC_KEY,
+      });
+
+      if (!ok) {
+        console.warn("Teya webhook: invalid signature");
+        return res.status(401).send("invalid signature");
+      }
+    }
+
+    const eventType = event?.type || event?.eventType || event?.name;
 
     const merchantRef =
-      event.data?.merchant_reference ||
-      event.merchant_reference ||
-      event.data?.merchantReference ||
-      event.data?.merchantReferenceId;
+      event?.data?.merchant_reference ||
+      event?.merchant_reference ||
+      event?.data?.merchantReference;
 
     const sessionId =
-      event.data?.session_id ||
-      event.session_id ||
-      event.data?.sessionId ||
-      event.data?.checkout_session_id;
+      event?.data?.session_id ||
+      event?.session_id ||
+      event?.data?.sessionId;
 
     const paymentId =
-      event.data?.payment_id ||
-      event.data?.id ||
-      event.payment_id ||
-      event.data?.paymentId;
+      event?.data?.payment_id ||
+      event?.data?.id ||
+      event?.payment_id;
 
     // Find order
     let order = null;
@@ -261,14 +265,14 @@ router.post("/teya/webhook", async (req, res) => {
       return res.status(200).send("ok");
     }
 
-    // Success event types — update after you log the real one
+    // ✅ IMPORTANT: you must match Teya’s real success event name
     const SUCCESS_TYPES = new Set([
       "payment.succeeded",
       "PAYMENT_SUCCEEDED",
       "Payment Succeeded",
       "checkout.session.completed",
-      "CHECKOUT_SESSION_COMPLETED",
       "payment.captured",
+      "payment.completed",
     ]);
 
     if (!SUCCESS_TYPES.has(String(eventType))) {
@@ -291,6 +295,8 @@ router.post("/teya/webhook", async (req, res) => {
       order.emailSentAt = new Date();
       await order.save();
     }
+
+    console.log("✅ Order marked paid", { orderId: order._id.toString() });
 
     return res.status(200).send("ok");
   } catch (err) {
