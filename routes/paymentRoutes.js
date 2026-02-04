@@ -205,6 +205,12 @@ router.post("/teya/webhook", async (req, res) => {
   try {
     // ✅ Express already parsed JSON
     const event = req.body;
+    console.log("TEYA WEBHOOK BODY:", JSON.stringify(event, null, 2));
+    console.log("TEYA WEBHOOK HEADERS:", {
+      "content-type": req.headers["content-type"],
+      "user-agent": req.headers["user-agent"],
+    });
+
 
     // TEMP: log what Teya actually sends (remove later)
     console.log("✅ TEYA WEBHOOK RECEIVED", {
