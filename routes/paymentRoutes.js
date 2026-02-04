@@ -203,62 +203,18 @@ function verifyTeyaSignature({ rawBody, signatureB64, publicKeyPem }) {
 
 router.post("/teya/webhook", async (req, res) => {
   try {
-    // ✅ Express already parsed JSON
     const event = req.body;
-    console.log("TEYA WEBHOOK BODY:", JSON.stringify(event, null, 2));
-    console.log("TEYA WEBHOOK HEADERS:", {
-      "content-type": req.headers["content-type"],
-      "user-agent": req.headers["user-agent"],
-    });
 
+    // ✅ Teya uses `event`, not `type`
+    const eventName = event?.event; // e.g. "payment.succeeded.v1"
+    const status = event?.data?.status; // e.g. "SUCCESS"
 
-    // TEMP: log what Teya actually sends (remove later)
-    console.log("✅ TEYA WEBHOOK RECEIVED", {
-      contentType: req.headers["content-type"],
-      eventType: event?.type || event?.eventType || event?.name,
-      hasRawBody: !!req.rawBody,
-    });
-
-    // ✅ If you want signature verification:
-    const shouldVerify = process.env.TEYA_VERIFY_WEBHOOK === "true";
-    if (shouldVerify) {
-      const signatureHeader =
-        req.headers["teya-signature"] ||
-        req.headers["x-teya-signature"] ||
-        req.headers["signature"];
-
-      const ok = verifyTeyaSignature({
-        rawBody: req.rawBody, // Buffer from your express.json verify hook
-        signatureB64: signatureHeader,
-        publicKeyPem: process.env.TEYA_WEBHOOK_PUBLIC_KEY,
-      });
-
-      if (!ok) {
-        console.warn("Teya webhook: invalid signature");
-        return res.status(401).send("invalid signature");
-      }
-    }
-
-    const eventType = event?.type || event?.eventType || event?.name;
-
-    const merchantRef =
-      event?.data?.merchant_reference ||
-      event?.merchant_reference ||
-      event?.data?.merchantReference;
-
-    const sessionId =
-      event?.data?.session_id ||
-      event?.session_id ||
-      event?.data?.sessionId;
-
-    const paymentId =
-      event?.data?.payment_id ||
-      event?.data?.id ||
-      event?.payment_id;
+    const merchantRef = event?.data?.merchant_reference;
+    const sessionId = event?.data?.session_id;
+    const paymentId = event?.data?.transaction_id;
 
     // Find order
     let order = null;
-
     if (merchantRef && mongoose.Types.ObjectId.isValid(String(merchantRef))) {
       order = await Order.findById(merchantRef);
     }
@@ -267,29 +223,27 @@ router.post("/teya/webhook", async (req, res) => {
     }
 
     if (!order) {
-      console.warn("Teya webhook: order not found", { merchantRef, sessionId, eventType });
+      console.warn("Teya webhook: order not found", { merchantRef, sessionId, eventName });
       return res.status(200).send("ok");
     }
 
-    // ✅ IMPORTANT: you must match Teya’s real success event name
-    const SUCCESS_TYPES = new Set([
-      "payment.succeeded",
-      "PAYMENT_SUCCEEDED",
-      "Payment Succeeded",
-      "checkout.session.completed",
-      "payment.captured",
-      "payment.completed",
-    ]);
+    // ✅ Treat success when eventName matches OR status is SUCCESS
+    const isSuccess =
+      eventName === "payment.succeeded.v1" ||
+      status === "SUCCESS";
 
-    if (!SUCCESS_TYPES.has(String(eventType))) {
-      console.log("Teya webhook: ignoring eventType", eventType);
+    if (!isSuccess) {
+      console.log("Teya webhook: not success", { eventName, status });
       return res.status(200).send("ok");
     }
 
+    // Idempotency
     if (order.paymentStatus === "paid" || order.payed === true) {
       return res.status(200).send("ok");
     }
 
+    // Mark paid
+    order.paymentProvider = "teya";
     order.paymentStatus = "paid";
     order.payed = true;
     order.paidAt = new Date();
@@ -302,7 +256,11 @@ router.post("/teya/webhook", async (req, res) => {
       await order.save();
     }
 
-    console.log("✅ Order marked paid", { orderId: order._id.toString() });
+    console.log("✅ Order marked paid", {
+      orderId: order._id.toString(),
+      paymentId: order.paymentId,
+      sessionId: order.checkoutSessionId,
+    });
 
     return res.status(200).send("ok");
   } catch (err) {
@@ -310,6 +268,7 @@ router.post("/teya/webhook", async (req, res) => {
     return res.status(500).send("error");
   }
 });
+
 
 
 export default router;
