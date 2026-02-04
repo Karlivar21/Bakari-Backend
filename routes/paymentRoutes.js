@@ -5,7 +5,6 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 
 
-
 const router = express.Router();
 
 /**
@@ -105,7 +104,7 @@ router.post("/teya/checkout-session", async (req, res) => {
       amount: { currency: "ISK", value: amountMinor },
       type: "SALE",
       success_url: `https://kallabakari.is/order/success?orderId=${order._id}`,
-      cancel_url: `https://kallabakari.is/order/cancel?orderId=${order._id}`,
+      cancel_url: `https://kallabakari.is/pantanir`,
       failure_url: `https://kallabakari.is/order/error?orderId=${order._id}`,
 
       // ✅ recommended
@@ -182,81 +181,144 @@ router.post("/teya/checkout-session", async (req, res) => {
     return res.status(500).json({ error: "Server error creating checkout session" });
   }
 });
+function verifyTeyaSignature({ rawBody, signatureB64, publicKeyPem }) {
+  if (!signatureB64 || !publicKeyPem) return false;
+
+  const signature = Buffer.from(String(signatureB64), "base64");
+
+  // Most common: RSA + SHA256 over raw body bytes
+  return crypto.verify("RSA-SHA256", rawBody, publicKeyPem, signature);
+}
 
 /**
  * 2) Webhook endpoint
  * Configure this URL in Teya Business Portal:
  *   https://api.kallabakari.is/api/payment/teya/webhook
  */
-router.post("/teya/webhook", async (req, res) => {
-  try {
-    const event = req.body;
 
-    const eventType = event.type || event.eventType;
+router.post(
+  "/teya/webhook",
+  // IMPORTANT: raw body so signature verification works
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    try {
+      const rawBody = req.body; // Buffer
+      const bodyText = rawBody.toString("utf8");
 
-    // Try all likely places for your order reference
-    const merchantRef =
-      event.data?.merchant_reference ||
-      event.merchant_reference ||
-      event.data?.merchantReference;
+      let event;
+      try {
+        event = JSON.parse(bodyText);
+      } catch {
+        console.warn("Teya webhook: invalid JSON");
+        return res.status(400).send("invalid json");
+      }
 
-    const sessionId =
-      event.data?.session_id ||
-      event.session_id ||
-      event.data?.sessionId;
+      // --- (1) Verify signature (if enabled) ---
+      // Header name can vary. Add/adjust once you see Teya’s real header.
+      const signatureHeader =
+        req.headers["teya-signature"] ||
+        req.headers["x-teya-signature"] ||
+        req.headers["signature"];
 
-    const paymentId =
-      event.data?.payment_id ||
-      event.data?.id ||
-      event.payment_id;
+      const publicKey = process.env.TEYA_WEBHOOK_PUBLIC_KEY;
 
-    // Find order
-    let order = null;
-    if (merchantRef && mongoose.Types.ObjectId.isValid(merchantRef)) {
-      order = await Order.findById(merchantRef);
-    }
-    if (!order && sessionId) {
-      order = await Order.findOne({ checkoutSessionId: sessionId });
-    }
+      // Toggle verification with env var (recommended ON in prod)
+      const shouldVerify = process.env.TEYA_VERIFY_WEBHOOK === "true";
 
+      if (shouldVerify) {
+        const ok = verifyTeyaSignature({
+          rawBody,
+          signatureB64: signatureHeader,
+          publicKeyPem: publicKey,
+        });
 
-    if (!order) {
-      console.warn("Teya webhook: order not found", { merchantRef, sessionId });
-      return res.status(200).send("ok");
-    }
+        if (!ok) {
+          console.warn("Teya webhook: invalid signature");
+          return res.status(401).send("invalid signature");
+        }
+      }
 
-    // Handle payment success
-    const isSuccess =
-      eventType === "payment.succeeded" ||
-      eventType === "PAYMENT_SUCCEEDED" ||
-      eventType === "Payment Succeeded";
+      // --- (2) Extract fields safely ---
+      const eventType = event?.type || event?.eventType || event?.name;
 
-    if (!isSuccess) return res.status(200).send("ok");
+      const data = event?.data ?? event;
 
-    // Idempotency: already paid → do nothing
-    if (order.paymentStatus === "paid") {
-      return res.status(200).send("ok");
-    }
+      const merchantRef =
+        data?.merchant_reference ||
+        data?.merchantReference ||
+        event?.merchant_reference;
 
-    // Mark order paid
-    order.paymentStatus = "paid";
-    order.payed = true;
-    order.paidAt = new Date();
-    order.paymentId = paymentId || null;
-    await order.save();
+      const sessionId =
+        data?.session_id ||
+        data?.sessionId ||
+        event?.session_id;
 
-    // Send confirmation email ONLY NOW
-    if (!order.emailSentAt) {
-      await sendOrderEmailBackend(order);
-      order.emailSentAt = new Date();
+      const paymentId =
+        data?.payment_id ||
+        data?.paymentId ||
+        data?.id ||
+        event?.payment_id;
+
+      // --- (3) Find order ---
+      let order = null;
+
+      if (merchantRef && mongoose.Types.ObjectId.isValid(String(merchantRef))) {
+        order = await Order.findById(merchantRef);
+      }
+
+      if (!order && sessionId) {
+        order = await Order.findOne({ checkoutSessionId: sessionId });
+      }
+
+      if (!order) {
+        console.warn("Teya webhook: order not found", {
+          eventType,
+          merchantRef,
+          sessionId,
+        });
+        // Always 200 so Teya doesn’t keep retrying forever for unknown orders
+        return res.status(200).send("ok");
+      }
+
+      // --- (4) Decide if payment is successful ---
+      const SUCCESS_TYPES = new Set([
+        "payment.succeeded",
+        "PAYMENT_SUCCEEDED",
+        "Payment Succeeded",
+        // Add real Teya event names once you see them:
+        // "checkout.session.completed",
+        // "payment.captured",
+      ]);
+
+      if (!SUCCESS_TYPES.has(String(eventType))) {
+        return res.status(200).send("ok");
+      }
+
+      // --- (5) Idempotent update ---
+      if (order.paymentStatus === "paid" || order.payed === true) {
+        return res.status(200).send("ok");
+      }
+
+      order.paymentProvider = "teya";
+      order.paymentStatus = "paid";
+      order.payed = true;
+      order.paidAt = new Date();
+      order.paymentId = paymentId ? String(paymentId) : null;
       await order.save();
-    }
 
-    return res.status(200).send("ok");
-  } catch (err) {
-    console.error("Teya webhook error:", err);
-    return res.status(500).send("error");
+      // Send confirmation email only once
+      if (!order.emailSentAt) {
+        await sendOrderEmailBackend(order);
+        order.emailSentAt = new Date();
+        await order.save();
+      }
+
+      return res.status(200).send("ok");
+    } catch (err) {
+      console.error("Teya webhook error:", err);
+      return res.status(500).send("error");
+    }
   }
-});
+);
 
 export default router;
