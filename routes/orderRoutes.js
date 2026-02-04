@@ -20,6 +20,24 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
 });
 
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid orderId" });
+    }
+
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ error: "Order not found" });
+
+    return res.json(order);
+  } catch (err) {
+    console.error("GET /api/orders/:id failed", err);
+    return res.status(500).json({ error: "Server error" });
+  }
+});
+
 // GET
 router.get("/", async (req, res) => {
   try {
