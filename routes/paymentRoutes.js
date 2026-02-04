@@ -98,16 +98,16 @@ router.post("/teya/checkout-session", async (req, res) => {
     const currency = "ISK";
 
     const token = await getTeyaAccessToken();
-
+    const publicOrderId = order.id;
       const payload = {
       // ✅ per docs
       amount: { currency: "ISK", value: amountMinor },
       type: "SALE",
-      success_url: `https://kallabakari.is/order/success?orderId=${order._id}`,
-      cancel_url: `https://kallabakari.is/pantanir`,
-      failure_url: `https://kallabakari.is/order/error?orderId=${order._id}`,
-
-      // ✅ recommended
+       // UUID shown to customers
+      success_url: `https://kallabakari.is/order/success?orderId=${publicOrderId}`,
+      failure_url: `https://kallabakari.is/order/error?orderId=${publicOrderId}`,
+      cancel_url: `https://kallabakari.is/pantanir?orderId=${publicOrderId}`,
+      // IMPORTANT: keep merchant_reference as Mongo _id for webhook mapping
       merchant_reference: String(order._id),
 
       // ✅ include store_id since you have it
