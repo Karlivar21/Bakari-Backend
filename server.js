@@ -92,7 +92,7 @@ app.use('/api/auth', authRoutes); // Use auth routes
 app.use('/api/comments', commentRoutes); // Use comment routes
 app.use('/api/send-order-email', emailRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/download/:orderId', downloadRoutes);
+app.use('/download', downloadRoutes);
 app.use('/api/payment', paymentRoutes);
 
 // Start the server
