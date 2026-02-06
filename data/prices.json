@@ -23,7 +23,7 @@
       "60": 41500
     },
     "Smjörkremskaka": {
-      "12-15": 16400,
+      "12-15": 1,
       "20-25": 21500,
       "25-30": 26500,
       "35-40": 30500
@@ -82,11 +82,11 @@
     "Snittubrauð": 990
   },
   "minidonuts": {
-    "unitPrice": 1
+    "unitPrice": 275
   },
   "smarettir": {
   "tomato-bruschetta": 645,
-  "kleina-lax": 1,
+  "kleina-lax": 645,
   "mini-burger-chicken": 645,
   "mini-burger-pulledpork": 645,
   "belgian-waffle-duck": 645,
