@@ -203,6 +203,12 @@ function verifyTeyaSignature({ rawBody, signatureB64, publicKeyPem }) {
 
 router.post("/teya/webhook", async (req, res) => {
   try {
+    console.log("✅ TEYA WEBHOOK HIT", {
+      headers: req.headers,
+      bodyType: typeof req.body,
+      body: req.body,
+    });
+
     const event = req.body;
 
     // ✅ Teya uses `event`, not `type`
