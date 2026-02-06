@@ -3,7 +3,7 @@ import express from "express";
 import Order from '../models/Order.js';
 import mongoose from "mongoose";
 import crypto from "crypto";
-
+import { sendOrderEmailBackend } from "../utils/sendOrderEmailBackend.js";
 
 const router = express.Router();
 
@@ -244,16 +244,16 @@ router.post("/teya/webhook", async (req, res) => {
     }
 
     // Idempotency
-    if (order.paymentStatus === "paid" || order.payed === true) {
-      return res.status(200).send("ok");
-    }
+    if (order.emailSentAt) return res.status(200).send("ok");
+
 
     // Mark paid
-    order.paymentProvider = "teya";
-    order.paymentStatus = "paid";
-    order.payed = true;
-    order.paidAt = new Date();
-    order.paymentId = paymentId ? String(paymentId) : null;
+    if (!order.payed) {
+      order.paymentStatus = "paid";
+      order.payed = true;
+      order.paidAt = new Date();
+      order.paymentId = paymentId ? String(paymentId) : null;
+    }
     await order.save();
 
     if (!order.emailSentAt) {
