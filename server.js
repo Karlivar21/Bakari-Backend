@@ -26,28 +26,38 @@ const app = express();
 connectDB();
 
 // ✅ Auto-expire pending orders every 5 minutes
+// Expire after 30 min
 setInterval(async () => {
   try {
+    const cutoff = new Date(Date.now() - 30 * 60 * 1000);
+
     const result = await Order.updateMany(
-      {
-        paymentStatus: "pending",
-        createdAt: { $lt: new Date(Date.now() - 30 * 60 * 1000) }, // 30 min
-      },
-      {
-        $set: {
-          paymentStatus: "expired",
-          payed: false,
-        },
-      }
+      { paymentStatus: "pending", createdAt: { $lt: cutoff } },
+      { $set: { paymentStatus: "expired", payed: false } }
     );
 
-    if (result.modifiedCount > 0) {
-      console.log("Expired orders:", result.modifiedCount);
-    }
+    if (result.modifiedCount > 0) console.log("Expired orders:", result.modifiedCount);
   } catch (err) {
     console.error("Expire job failed:", err);
   }
-}, 5 * 60 * 1000); // every 5 minutes
+}, 5 * 60 * 1000);
+
+// Delete expired after e.g. 24 hours
+setInterval(async () => {
+  try {
+    const cutoff = new Date(Date.now() - 30 * 60 * 1000);
+
+    const result = await Order.deleteMany({
+      paymentStatus: "expired",
+      createdAt: { $lt: cutoff },
+    });
+
+    if (result.deletedCount > 0) console.log("Deleted expired orders:", result.deletedCount);
+  } catch (err) {
+    console.error("Expired cleanup failed:", err);
+  }
+}, 60 * 60 * 1000);
+
 
 
 // Use CORS middleware
