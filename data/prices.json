@@ -1,7 +1,7 @@
 {
   "kokur": {
     "Sykurmassamynd": {
-      "unitPrice": 8500
+      "unitPrice": 2500
     },
     "Afmælistertur": {
       "20": 10000,
@@ -37,7 +37,7 @@
       "16": 13500,
       "20": 16500,
       "30": 23400,
-      "40": 27400
+      "40": 1
     },
     "Marengsterta": {
       "30": 20200,
