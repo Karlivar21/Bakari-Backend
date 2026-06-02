@@ -37,7 +37,7 @@
       "16": 13500,
       "20": 16500,
       "30": 23400,
-      "40": 1
+      "40": 27400
     },
     "Marengsterta": {
       "30": 20200,
@@ -56,7 +56,7 @@
         "40": 34500
     },
     "Amerísk súkkulaði": {
-        "16": 12300,
+        "16": 1,
         "20": 14500,
         "30": 19900,
         "40": 24500,
@@ -93,7 +93,7 @@
   "snitta-brie-parma": 645,
   "snitta-beef-truffle": 645,
   "soy-chicken-skewer": 645,
-  "mini-pavlova": 645,
+  "mini-pavlova": 1,
 
   "bacon-dates": 550,
   "choco-strawberry": 550,
