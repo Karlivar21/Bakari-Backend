@@ -31,7 +31,7 @@
     "Skírnarkoddar": {
       "20": 19500,
       "30": 25500,
-      "40": 1
+      "40": 31500
     },
     "Brauðtertur": {
       "16": 13500,
@@ -78,7 +78,7 @@
   },
 
   "breads": {
-    "Ólífubrauð": 1,
+    "Ólífubrauð": 1290,
     "Snittubrauð": 990
   },
   "minidonuts": {
@@ -86,7 +86,7 @@
   },
   "smarettir": {
   "tomato-bruschetta": 645,
-  "kleina-lax": 1,
+  "kleina-lax": 645,
   "mini-burger-chicken": 645,
   "mini-burger-pulledpork": 645,
   "belgian-waffle-duck": 645,
