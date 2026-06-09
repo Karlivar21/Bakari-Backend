@@ -69,7 +69,7 @@ router.get("/", async (req, res) => {
 // POST
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { id, name, phone, email, date, products, user_message, payed } = req.body;
+    const { id, name, phone, email, date, products, user_message, payed, paymentStatus } = req.body;
 
     const image = req.file ? req.file.path : null;
 
@@ -87,6 +87,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       payed,
       image,
       totalAmount,
+      ...(paymentStatus && { paymentStatus }),
     });
 
     await newOrder.save();
@@ -114,6 +115,44 @@ router.delete("/:id", async (req, res) => {
     res.status(200).json({ message: "Order deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting order", error });
+  }
+});
+
+// PUT /api/orders/:id — update order by public UUID
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, phone, email, date, user_message, payed, products, paymentStatus } = req.body;
+
+    const update = {};
+    if (name !== undefined) update.name = name;
+    if (phone !== undefined) update.phone = phone;
+    if (email !== undefined) update.email = email;
+    if (date !== undefined) update.date = new Date(date);
+    if (user_message !== undefined) update.user_message = user_message;
+    if (payed !== undefined) update.payed = typeof payed === 'boolean' ? payed : payed === 'true';
+    if (paymentStatus !== undefined) update.paymentStatus = paymentStatus;
+
+    if (products !== undefined) {
+      const parsedProducts = typeof products === 'string' ? JSON.parse(products) : products;
+      update.products = parsedProducts;
+      try {
+        update.totalAmount = calculateTotalISK(parsedProducts);
+      } catch (e) {
+        console.warn("Could not recalculate total on update:", e.message);
+      }
+    }
+
+    const updated = await Order.findOneAndUpdate(
+      { id },
+      { $set: update },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ error: "Order not found" });
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: "Error updating order", error: String(error?.message || error) });
   }
 });
 
