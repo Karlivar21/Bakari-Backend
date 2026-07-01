@@ -1,42 +1,29 @@
-import express from 'express';
-import Mailjet from 'node-mailjet';
+import express from "express";
+import { SendEmailCommand } from "@aws-sdk/client-ses";
+import { sesClient } from "../utils/ses.js";
 
 const router = express.Router();
 
-// Initialize Mailjet client
-const mailjet = Mailjet.apiConnect('3ac0f68ea6606e9bc0447c088ce1cdaa', '6de48e2aa320803ee8ff6a454f7b7862');
-
-// Route to send email
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   const { to, subject, text, html } = req.body;
 
-  // Ensure requestData is defined and properly scoped
-  const requestData = {
-    Messages: [
-      {
-        From: {
-          Email: 'noreply@kallabakari.is',
-          Name: 'Kallabakarí'
-        },
-        To: [
-          {
-            Email: to
-          }
-        ],
-        Subject: subject,
-        TextPart: text,
-        HTMLPart: html
-      }
-    ]
-  };
+  const command = new SendEmailCommand({
+    Source: "Kallabakarí <noreply@kallabakari.is>",
+    Destination: { ToAddresses: [to] },
+    Message: {
+      Subject: { Data: subject, Charset: "UTF-8" },
+      Body: {
+        Text: { Data: text || "", Charset: "UTF-8" },
+        Html: { Data: html || "", Charset: "UTF-8" },
+      },
+    },
+  });
 
   try {
-    console.log('Sending email with data:', requestData); // Log request data
-    const response = await mailjet.post('send', { version: 'v3.1' }).request(requestData);
-    console.log('Mailjet response:', response.body); // Log Mailjet response
-    res.status(200).json(response.body);
+    const response = await sesClient.send(command);
+    res.status(200).json({ MessageId: response.MessageId });
   } catch (error) {
-    console.error('Error sending email:', error); // Log error details
+    console.error("Error sending email:", error);
     res.status(500).json({ error: error.message });
   }
 });

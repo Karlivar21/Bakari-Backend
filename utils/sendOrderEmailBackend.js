@@ -1,4 +1,5 @@
-import { mailjet } from "./mailjet.js";
+import { SendEmailCommand } from "@aws-sdk/client-ses";
+import { sesClient } from "./ses.js";
 
 const formatISK = (n) =>
   new Intl.NumberFormat("is-IS", { maximumFractionDigits: 0 }).format(
@@ -160,16 +161,19 @@ export async function sendOrderEmailBackend(order) {
 
   const text = `Takk fyrir pöntunina, ${order.name}!\nGreiðsla hefur verið staðfest.\n\nPöntunarnúmer: ${order.id}\nAfhendingardagur: ${deliveryDate}\nHeildarupphæð: ${formatISK(order.totalAmount)} kr\n`;
 
-  const response = await mailjet.post("send", { version: "v3.1" }).request({
-    Messages: [{
-      From: { Email: "noreply@kallabakari.is", Name: "Kallabakarí" },
-      To: [{ Email: order.email, Name: order.name }],
-      Subject: `Pöntun staðfest – ${deliveryDate}`,
-      TextPart: text,
-      HTMLPart: html,
-    }],
+  const command = new SendEmailCommand({
+    Source: "Kallabakarí <noreply@kallabakari.is>",
+    Destination: { ToAddresses: [order.email] },
+    Message: {
+      Subject: { Data: `Pöntun staðfest – ${deliveryDate}`, Charset: "UTF-8" },
+      Body: {
+        Text: { Data: text, Charset: "UTF-8" },
+        Html: { Data: html, Charset: "UTF-8" },
+      },
+    },
   });
 
-  console.log("📧 Mailjet response:", JSON.stringify(response.body, null, 2));
-  return response.body;
+  const response = await sesClient.send(command);
+  console.log("📧 SES response:", response.MessageId);
+  return response;
 }
