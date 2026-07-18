@@ -17,6 +17,10 @@ router.get("/:orderId", async (req, res) => {
   try {
     const { orderId } = req.params;
 
+    if (!/^[a-f\d]{24}$/i.test(orderId)) {
+      return res.status(404).json({ message: "Order or image not found" });
+    }
+
     const order = await Order.findById(orderId);
     if (!order?.image) {
       return res.status(404).json({ message: "Order or image not found" });

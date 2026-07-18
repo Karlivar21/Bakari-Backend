@@ -6,7 +6,6 @@ import soupPlanRoute from './routes/soupPlan.js';
 import authRoutes from './routes/authRoutes.js'; // Import auth routes
 import commentRoutes from './routes/commentRoutes.js'; // Import comment routes
 import cors from 'cors';
-import emailRoutes from './routes/emailRoutes.js';
 import downloadRoutes from './routes/downloadRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import { WebSocketServer } from 'ws';
@@ -100,7 +99,6 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/soupPlan', soupPlanRoute);
 app.use('/api/auth', authRoutes); // Use auth routes
 app.use('/api/comments', commentRoutes); // Use comment routes
-app.use('/api/send-order-email', emailRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/download', downloadRoutes);
 app.use('/api/payment', paymentRoutes);
