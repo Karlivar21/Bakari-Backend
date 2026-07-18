@@ -1,9 +1,3 @@
-import { SESClient } from "@aws-sdk/client-ses";
+import { Resend } from "resend";
 
-export const sesClient = new SESClient({
-  region: process.env.AWS_REGION || "eu-north-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+export const resend = new Resend(process.env.RESEND_API_KEY);

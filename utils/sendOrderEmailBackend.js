@@ -1,5 +1,4 @@
-import { SendEmailCommand } from "@aws-sdk/client-ses";
-import { sesClient } from "./ses.js";
+import { resend } from "./ses.js";
 
 const formatISK = (n) =>
   new Intl.NumberFormat("is-IS", { maximumFractionDigits: 0 }).format(
@@ -161,19 +160,15 @@ export async function sendOrderEmailBackend(order) {
 
   const text = `Takk fyrir pöntunina, ${order.name}!\nGreiðsla hefur verið staðfest.\n\nPöntunarnúmer: ${order.id}\nAfhendingardagur: ${deliveryDate}\nHeildarupphæð: ${formatISK(order.totalAmount)} kr\n`;
 
-  const command = new SendEmailCommand({
-    Source: "Kallabakarí <noreply@kallabakari.is>",
-    Destination: { ToAddresses: [order.email] },
-    Message: {
-      Subject: { Data: `Pöntun staðfest – ${deliveryDate}`, Charset: "UTF-8" },
-      Body: {
-        Text: { Data: text, Charset: "UTF-8" },
-        Html: { Data: html, Charset: "UTF-8" },
-      },
-    },
+  const { data, error } = await resend.emails.send({
+    from: "Kallabakarí <noreply@kallabakari.is>",
+    to: [order.email],
+    subject: `Pöntun staðfest – ${deliveryDate}`,
+    html,
+    text,
   });
 
-  const response = await sesClient.send(command);
-  console.log("📧 SES response:", response.MessageId);
-  return response;
+  if (error) throw new Error(`Resend error: ${error.message}`);
+  console.log("📧 Resend response:", data.id);
+  return data;
 }
