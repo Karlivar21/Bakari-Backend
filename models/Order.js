@@ -15,6 +15,7 @@ const orderSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     email: { type: String, required: true },
     date: { type: Date, required: true },
+    pickupTime: { type: String },
     products: [productSchema],
     user_message: { type: String },
     payed: { type: Boolean, default: false },
