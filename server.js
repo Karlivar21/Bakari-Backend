@@ -8,6 +8,7 @@ import commentRoutes from './routes/commentRoutes.js'; // Import comment routes
 import cors from 'cors';
 import downloadRoutes from './routes/downloadRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import companyRoutes from './routes/companyRoutes.js';
 import { WebSocketServer } from 'ws';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -68,6 +69,8 @@ const corsOptions = {
       'https://www.kallabakari.is',
       'http://localhost:3000',
       'http://localhost:3001',
+      'http://localhost:3002',
+      'https://fyrirtaeki.kallabakari.is',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
@@ -102,6 +105,7 @@ app.use('/api/comments', commentRoutes); // Use comment routes
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/download', downloadRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/company', companyRoutes);
 
 // Start the server
 const server = app.listen(process.env.PORT || 5010, () => {
