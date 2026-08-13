@@ -8,6 +8,7 @@ const productSchema = new mongoose.Schema({
 const companyOrderSchema = new mongoose.Schema({
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', required: true },
   date: { type: Date, required: true },
+  deliveryType: { type: String, enum: ['pickup', 'delivery'], default: 'pickup' },
   pickupTime: { type: String },
   products: [productSchema],
   note: { type: String },

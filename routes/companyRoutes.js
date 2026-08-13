@@ -58,12 +58,13 @@ router.get('/orders', companyAuth, async (req, res) => {
 });
 
 router.post('/orders', companyAuth, async (req, res) => {
-  const { date, pickupTime, products, note } = req.body;
+  const { date, deliveryType, pickupTime, products, note } = req.body;
   try {
     const totalAmount = calculateTotalISK(products);
     const order = new CompanyOrder({
       companyId: req.company.companyId,
       date: new Date(date),
+      deliveryType: deliveryType || 'pickup',
       pickupTime,
       products,
       note,
