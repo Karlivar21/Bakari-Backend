@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Company from '../models/Company.js';
 import CompanyOrder from '../models/CompanyOrder.js';
+import Order from '../models/Order.js';
 import { calculateTotalISK } from '../utils/pricing.js';
 import companyAuth from '../middleware/companyAuth.js';
 import adminAuth from '../middleware/auth.js';
@@ -127,11 +128,39 @@ router.delete('/admin/companies/:id', adminAuth, async (req, res) => {
   }
 });
 
-// Admin: view all company orders
+// Admin dashboard: view all company orders (uses regular admin token)
 router.get('/admin/orders', adminAuth, async (req, res) => {
   try {
     const orders = await CompanyOrder.find().populate('companyId', 'name').sort({ date: 1 });
     res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin dashboard: update company order status
+router.patch('/admin/orders/:id/status', adminAuth, async (req, res) => {
+  const { status } = req.body;
+  const allowed = ['pending', 'confirmed', 'completed', 'cancelled'];
+  if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+  try {
+    const order = await CompanyOrder.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (!order) return res.status(404).json({ error: 'Not found' });
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Company portal admin: all orders combined (regular + company, uses company portal admin token)
+router.get('/admin/all-orders', companyAuth, async (req, res) => {
+  if (req.company.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+  try {
+    const [regular, company] = await Promise.all([
+      Order.find().sort({ date: 1 }),
+      CompanyOrder.find().populate('companyId', 'name').sort({ date: 1 }),
+    ]);
+    res.json({ regular, company });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
