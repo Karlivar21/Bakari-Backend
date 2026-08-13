@@ -6,6 +6,7 @@ import CompanyOrder from '../models/CompanyOrder.js';
 import { calculateTotalISK } from '../utils/pricing.js';
 import companyAuth from '../middleware/companyAuth.js';
 import adminAuth from '../middleware/auth.js';
+import adminUsers from '../data/users.js';
 
 const router = express.Router();
 
@@ -14,6 +15,20 @@ const router = express.Router();
 router.post('/auth/login', async (req, res) => {
   const { username, password } = req.body;
   try {
+    // Try admin users first
+    const adminUser = adminUsers.find(u => u.username === username);
+    if (adminUser) {
+      const match = await bcrypt.compare(password, adminUser.password);
+      if (!match) return res.status(401).json({ error: 'Rangt notendanafn eða lykilorð' });
+      const token = jwt.sign(
+        { name: 'Stjórnandi', role: 'admin' },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      return res.json({ token, name: 'Stjórnandi', role: 'admin' });
+    }
+
+    // Try company accounts
     const company = await Company.findOne({ username });
     if (!company || !(await company.comparePassword(password)))
       return res.status(401).json({ error: 'Rangt notendanafn eða lykilorð' });
@@ -23,7 +38,7 @@ router.post('/auth/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
-    res.json({ token, name: company.name, companyId: company._id });
+    res.json({ token, name: company.name, role: 'company', companyId: company._id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -33,7 +48,8 @@ router.post('/auth/login', async (req, res) => {
 
 router.get('/orders', companyAuth, async (req, res) => {
   try {
-    const orders = await CompanyOrder.find({ companyId: req.company.companyId }).sort({ date: 1 });
+    const query = req.company.role === 'admin' ? {} : { companyId: req.company.companyId };
+    const orders = await CompanyOrder.find(query).populate('companyId', 'name').sort({ date: 1 });
     res.json(orders);
   } catch (err) {
     res.status(500).json({ error: err.message });
