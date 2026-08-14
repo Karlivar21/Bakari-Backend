@@ -60,9 +60,13 @@ router.get('/orders', companyAuth, async (req, res) => {
 router.post('/orders', companyAuth, async (req, res) => {
   const { date, deliveryType, pickupTime, products, note } = req.body;
   try {
-    const priceable = products.filter(p => ['cake', 'bread', 'minidonut'].includes(p.type));
+    const PRICED_TYPES = ['cake', 'bread', 'minidonut'];
     let totalAmount = 0;
-    try { totalAmount = calculateTotalISK(priceable); } catch { totalAmount = 0; }
+    for (const p of products) {
+      if (PRICED_TYPES.includes(p.type)) {
+        try { totalAmount += calculateTotalISK([p]); } catch { /* unknown item — invoiced manually */ }
+      }
+    }
     const order = new CompanyOrder({
       companyId: req.company.companyId,
       date: new Date(date),
