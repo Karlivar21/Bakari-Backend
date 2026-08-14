@@ -60,7 +60,9 @@ router.get('/orders', companyAuth, async (req, res) => {
 router.post('/orders', companyAuth, async (req, res) => {
   const { date, deliveryType, pickupTime, products, note } = req.body;
   try {
-    const totalAmount = calculateTotalISK(products);
+    const priceable = products.filter(p => ['cake', 'bread', 'minidonut'].includes(p.type));
+    let totalAmount = 0;
+    try { totalAmount = calculateTotalISK(priceable); } catch { totalAmount = 0; }
     const order = new CompanyOrder({
       companyId: req.company.companyId,
       date: new Date(date),
