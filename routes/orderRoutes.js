@@ -69,7 +69,7 @@ router.get("/", async (req, res) => {
 // POST
 router.post("/", upload.single("image"), async (req, res) => {
   try {
-    const { id, name, phone, email, date, products, user_message, payed, paymentStatus } = req.body;
+    const { id, name, phone, email, date, pickupTime, products, user_message, payed, paymentStatus } = req.body;
 
     const image = req.file ? req.file.path : null;
 
@@ -82,6 +82,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       phone,
       email,
       date: new Date(date),
+      pickupTime,
       products: parsedProducts,
       user_message,
       payed,
@@ -122,13 +123,14 @@ router.delete("/:id", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, phone, email, date, user_message, payed, products, paymentStatus } = req.body;
+    const { name, phone, email, date, pickupTime, user_message, payed, products, paymentStatus } = req.body;
 
     const update = {};
     if (name !== undefined) update.name = name;
     if (phone !== undefined) update.phone = phone;
     if (email !== undefined) update.email = email;
     if (date !== undefined) update.date = new Date(date);
+    if (pickupTime !== undefined) update.pickupTime = pickupTime;
     if (user_message !== undefined) update.user_message = user_message;
     if (payed !== undefined) update.payed = typeof payed === 'boolean' ? payed : payed === 'true';
     if (paymentStatus !== undefined) update.paymentStatus = paymentStatus;
