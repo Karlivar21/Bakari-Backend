@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Company from '../models/Company.js';
@@ -8,6 +9,12 @@ import { calculateTotalISK } from '../utils/pricing.js';
 import companyAuth from '../middleware/companyAuth.js';
 import adminAuth from '../middleware/auth.js';
 import adminUsers from '../data/users.js';
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, `company-${Date.now()}-${file.originalname}`),
+});
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
 
 const router = express.Router();
 
@@ -57,9 +64,13 @@ router.get('/orders', companyAuth, async (req, res) => {
   }
 });
 
-router.post('/orders', companyAuth, async (req, res) => {
-  const { date, deliveryType, pickupTime, products, note } = req.body;
+router.post('/orders', companyAuth, upload.single('image'), async (req, res) => {
+  const { date, deliveryType, pickupTime, note } = req.body;
   try {
+    const products = typeof req.body.products === 'string'
+      ? JSON.parse(req.body.products)
+      : req.body.products;
+    const image = req.file ? req.file.path : null;
     const PRICED_TYPES = ['cake', 'bread', 'minidonut'];
     let totalAmount = 0;
     for (const p of products) {
@@ -74,6 +85,7 @@ router.post('/orders', companyAuth, async (req, res) => {
       pickupTime,
       products,
       note,
+      image,
       totalAmount,
     });
     await order.save();

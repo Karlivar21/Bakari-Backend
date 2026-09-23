@@ -12,6 +12,7 @@ const companyOrderSchema = new mongoose.Schema({
   pickupTime: { type: String },
   products: [productSchema],
   note: { type: String },
+  image: { type: String },
   totalAmount: { type: Number, required: true },
   status: {
     type: String,
