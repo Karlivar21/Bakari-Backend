@@ -70,7 +70,7 @@ const corsOptions = {
       'http://localhost:3000',
       'http://localhost:3001',
       'http://localhost:3002',
-      'https://fyrirtaeki.kallabakari.is',
+      'https://fyrirtæki.kallabakari.is',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept, Authorization',
