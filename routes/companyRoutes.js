@@ -46,7 +46,23 @@ router.post('/auth/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
-    res.json({ token, name: company.name, role: 'company', companyId: company._id });
+    res.json({ token, name: company.name, role: 'company', companyId: company._id, mustChangePassword: !!company.mustChangePassword });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/auth/change-password', companyAuth, async (req, res) => {
+  if (req.company.role !== 'company') return res.status(403).json({ error: 'Forbidden' });
+  const { newPassword } = req.body;
+  if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'Lykilorð verður að vera a.m.k. 6 stafir' });
+  try {
+    const company = await Company.findById(req.company.companyId);
+    if (!company) return res.status(404).json({ error: 'Not found' });
+    company.password = newPassword;
+    company.mustChangePassword = false;
+    await company.save();
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

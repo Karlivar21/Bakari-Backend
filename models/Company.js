@@ -5,6 +5,7 @@ const companySchema = new mongoose.Schema({
   name: { type: String, required: true },
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  mustChangePassword: { type: Boolean, default: true },
 }, { timestamps: true });
 
 companySchema.pre('save', async function (next) {
