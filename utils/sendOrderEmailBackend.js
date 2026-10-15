@@ -73,8 +73,8 @@ export async function sendOrderEmailBackend(order) {
       <!-- Header -->
       <tr>
         <td style="background:#1c1917;border-radius:16px 16px 0 0;padding:28px 32px;">
-          <div style="font-size:22px;font-weight:700;color:#f5f0e8;letter-spacing:0.5px;">Kallabakarí</div>
-          <div style="margin-top:4px;font-size:13px;color:#c29979;letter-spacing:0.3px;">Greiðsla staðfest · Pöntun móttekin</div>
+          <img src="https://kallabakari.is/kallabakari_logo_white.png" alt="Kallabakarí" style="height:48px;width:auto;display:block;" />
+          <div style="margin-top:8px;font-size:13px;color:#c29979;letter-spacing:0.3px;">Greiðsla staðfest · Pöntun móttekin</div>
         </td>
       </tr>
 
