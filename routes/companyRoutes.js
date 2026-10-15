@@ -9,6 +9,7 @@ import { calculateTotalISK } from '../utils/pricing.js';
 import companyAuth from '../middleware/companyAuth.js';
 import adminAuth from '../middleware/auth.js';
 import adminUsers from '../data/users.js';
+import { sendCompanyOrderEmail } from '../utils/sendCompanyOrderEmail.js';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -21,13 +22,13 @@ const router = express.Router();
 // ── Company auth ──────────────────────────────────────────────
 
 router.post('/auth/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
   try {
-    // Try admin users first
-    const adminUser = adminUsers.find(u => u.username === username);
+    // Try admin users first (admins still use username stored as email field or fallback)
+    const adminUser = adminUsers.find(u => u.username === email);
     if (adminUser) {
       const match = await bcrypt.compare(password, adminUser.password);
-      if (!match) return res.status(401).json({ error: 'Rangt notendanafn eða lykilorð' });
+      if (!match) return res.status(401).json({ error: 'Rangt netfang eða lykilorð' });
       const token = jwt.sign(
         { name: 'Stjórnandi', role: 'admin' },
         process.env.JWT_SECRET,
@@ -36,10 +37,11 @@ router.post('/auth/login', async (req, res) => {
       return res.json({ token, name: 'Stjórnandi', role: 'admin' });
     }
 
-    // Try company accounts
-    const company = await Company.findOne({ username });
+    // Try company accounts — by email first, fall back to username
+    const company = await Company.findOne({ email: email?.toLowerCase() })
+      ?? await Company.findOne({ username: email });
     if (!company || !(await company.comparePassword(password)))
-      return res.status(401).json({ error: 'Rangt notendanafn eða lykilorð' });
+      return res.status(401).json({ error: 'Rangt netfang eða lykilorð' });
 
     const token = jwt.sign(
       { companyId: company._id, name: company.name, role: 'company' },
@@ -106,6 +108,14 @@ router.post('/orders', companyAuth, upload.single('image'), async (req, res) => 
     });
     await order.save();
     res.status(201).json(order);
+    // Send confirmation email (non-blocking — don't fail the order if email fails)
+    Company.findById(req.company.companyId).then(company => {
+      if (company?.email) {
+        sendCompanyOrderEmail({ order, company }).catch(err =>
+          console.error('Company order email failed:', err.message)
+        );
+      }
+    }).catch(() => {});
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -144,11 +154,11 @@ router.get('/admin/companies', adminAuth, async (req, res) => {
 });
 
 router.post('/admin/companies', adminAuth, async (req, res) => {
-  const { name, username, password } = req.body;
+  const { name, username, email, password } = req.body;
   try {
-    const company = new Company({ name, username, password });
+    const company = new Company({ name, username, email, password });
     await company.save();
-    res.status(201).json({ _id: company._id, name: company.name, username: company.username });
+    res.status(201).json({ _id: company._id, name: company.name, username: company.username, email: company.email });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

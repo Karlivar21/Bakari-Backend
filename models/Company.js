@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 const companySchema = new mongoose.Schema({
   name: { type: String, required: true },
   username: { type: String, required: true, unique: true },
+  email: { type: String, required: false, unique: true, sparse: true, lowercase: true, trim: true },
   password: { type: String, required: true },
   mustChangePassword: { type: Boolean, default: true },
 }, { timestamps: true });
