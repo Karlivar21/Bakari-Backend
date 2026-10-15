@@ -22,10 +22,11 @@ const router = express.Router();
 // ── Company auth ──────────────────────────────────────────────
 
 router.post('/auth/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, username, password } = req.body;
+  const loginId = (email || username || '').trim();
   try {
-    // Try admin users first (admins still use username stored as email field or fallback)
-    const adminUser = adminUsers.find(u => u.username === email);
+    // Try admin users first
+    const adminUser = adminUsers.find(u => u.username === loginId);
     if (adminUser) {
       const match = await bcrypt.compare(password, adminUser.password);
       if (!match) return res.status(401).json({ error: 'Rangt netfang eða lykilorð' });
@@ -37,9 +38,9 @@ router.post('/auth/login', async (req, res) => {
       return res.json({ token, name: 'Stjórnandi', role: 'admin' });
     }
 
-    // Try company accounts — by email first, fall back to username
-    const company = await Company.findOne({ email: email?.toLowerCase() })
-      ?? await Company.findOne({ username: email });
+    // Try company accounts — by email first, then by username
+    const company = await Company.findOne({ email: loginId.toLowerCase() })
+      ?? await Company.findOne({ username: loginId });
     if (!company || !(await company.comparePassword(password)))
       return res.status(401).json({ error: 'Rangt netfang eða lykilorð' });
 
