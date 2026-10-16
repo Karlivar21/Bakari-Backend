@@ -9,7 +9,6 @@ import { calculateTotalISK } from '../utils/pricing.js';
 import companyAuth from '../middleware/companyAuth.js';
 import adminAuth from '../middleware/auth.js';
 import adminUsers from '../data/users.js';
-import { sendCompanyOrderEmail } from '../utils/sendCompanyOrderEmail.js';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -109,13 +108,15 @@ router.post('/orders', companyAuth, upload.single('image'), async (req, res) => 
     });
     await order.save();
     res.status(201).json(order);
-    // Send confirmation email (non-blocking — don't fail the order if email fails)
-    Company.findById(req.company.companyId).then(company => {
-      if (company?.email) {
-        sendCompanyOrderEmail({ order, company }).catch(err =>
-          console.error('Company order email failed:', err.message)
-        );
-      }
+    // Send confirmation email (non-blocking — dynamic import so a missing API key can't crash the module)
+    import('../utils/sendCompanyOrderEmail.js').then(({ sendCompanyOrderEmail }) => {
+      Company.findById(req.company.companyId).then(company => {
+        if (company?.email) {
+          sendCompanyOrderEmail({ order, company }).catch(err =>
+            console.error('Company order email failed:', err.message)
+          );
+        }
+      }).catch(() => {});
     }).catch(() => {});
   } catch (err) {
     res.status(400).json({ error: err.message });
