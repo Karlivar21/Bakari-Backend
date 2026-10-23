@@ -9,6 +9,7 @@ import { calculateTotalISK } from '../utils/pricing.js';
 import companyAuth from '../middleware/companyAuth.js';
 import adminAuth from '../middleware/auth.js';
 import adminUsers from '../data/users.js';
+import { sendPushToAll } from '../utils/sendPushNotification.js';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -108,6 +109,15 @@ router.post('/orders', companyAuth, upload.single('image'), async (req, res) => 
     });
     await order.save();
     res.status(201).json(order);
+    // Send push notification to all subscribed baker devices (non-blocking)
+    Company.findById(req.company.companyId).then(company => {
+      const deliveryDate = new Date(order.date).toLocaleDateString('is-IS', { day: 'numeric', month: 'long' });
+      sendPushToAll({
+        title: 'Ný fyrirtækjapöntun',
+        body: `${company?.name ?? 'Fyrirtæki'} – ${deliveryDate}`,
+        url: '/company-orders',
+      }).catch(err => console.error('Push notification failed:', err.message));
+    }).catch(() => {});
     // Send confirmation email (non-blocking — dynamic import so a missing API key can't crash the module)
     import('../utils/sendCompanyOrderEmail.js').then(({ sendCompanyOrderEmail }) => {
       Company.findById(req.company.companyId).then(company => {

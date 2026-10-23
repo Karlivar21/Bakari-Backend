@@ -9,6 +9,7 @@ import cors from 'cors';
 import downloadRoutes from './routes/downloadRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
+import pushRoutes from './routes/pushRoutes.js';
 import { WebSocketServer } from 'ws';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -107,6 +108,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/download', downloadRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/company', companyRoutes);
+app.use('/api/push', pushRoutes);
 
 // Start the server
 const server = app.listen(process.env.PORT || 5010, () => {
