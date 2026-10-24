@@ -209,6 +209,17 @@ router.patch('/admin/orders/:id/status', adminAuth, async (req, res) => {
   }
 });
 
+// Admin dashboard: delete a company order
+router.delete('/admin/orders/:id', adminAuth, async (req, res) => {
+  try {
+    const order = await CompanyOrder.findByIdAndDelete(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Not found' });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Company portal admin: all orders combined (regular + company, uses company portal admin token)
 router.get('/admin/all-orders', companyAuth, async (req, res) => {
   if (req.company.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
